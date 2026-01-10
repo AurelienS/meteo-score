@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(ls:*)",
+      "WebSearch",
+      "Bash(cat:*)",
+      "Bash(/home/fly/dev/meteo-score/_bmad-output/planning-artifacts/ux-design-specification.md)",
+      "SlashCommand(/bmad:bmm:workflows:create-architecture)",
+      "Skill(bmad:bmm:workflows:generate-project-context)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

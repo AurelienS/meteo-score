@@ -1,0 +1,140 @@
+# Workflow Status Template
+
+# This tracks progress through BMM methodology Analysis, Planning, and Solutioning phases.
+# Implementation phase is tracked separately in sprint-status.yaml
+
+# STATUS DEFINITIONS:
+# ==================
+# Initial Status (before completion):
+#   - required: Must be completed to progress
+#   - optional: Can be completed but not required
+#   - recommended: Strongly suggested but not required
+#   - conditional: Required only if certain conditions met (e.g., if_has_ui)
+#
+# Completion Status:
+#   - {file-path}: File created/found (e.g., "docs/product-brief.md")
+#   - skipped: Optional/conditional workflow that was skipped
+
+generated: "2026-01-10T14:51:01Z"
+project: "meteo-score"
+
+# Project Vision (Enhanced via Socratic Questioning)
+project_vision: |
+  MétéoScore = Plateforme web de comparaison objective de la précision des modèles
+  de prévision météo, spécialisée pour les parapentistes.
+
+  Objectif: Déterminer quel modèle de prévision météo est le plus fiable par zone géographique
+  en comparant les prévisions avec les observations réelles (balises météo, stations).
+
+  Géographie: France (Alpes du Nord/Sud, vallées, Méditerranée, Atlantique)
+  Granularité: Par site de vol ou région
+
+  Modèles comparés: Arome, CH1, autres modèles météo parapente
+  Critères prioritaires: 1) Vent (critique), 2) Pluie, 3) Développement nuageux/orages
+
+  MVP: 1 site de vol, critère vent uniquement, 2-3 modèles
+  Format: Site web consultation (gratuit)
+  Données: API publiques + scraping si nécessaire
+  Historique: Idéal si accessible, sinon démarrage progressif à partir d'aujourd'hui
+
+project_type: "web-platform"
+selected_track: "method"
+field_type: "greenfield"
+workflow_path: "_bmad/bmm/workflows/workflow-status/paths/method-greenfield.yaml"
+
+# Discovery workflows selected by user
+discovery_workflows:
+  brainstorm: true
+  research: true
+  product_brief: true
+
+# Workflow Status Tracking
+workflow_status:
+  # ===== PHASE 1: Analysis (Optional Discovery) =====
+  - phase: 1
+    phase_name: "Analysis"
+    workflows:
+      - id: "brainstorm"
+        name: "Brainstorming"
+        agent: "analyst"
+        command: "/bmad:bmm:workflows:brainstorming"
+        status: "_bmad-output/analysis/brainstorming-session-2026-01-10.md"
+        note: "Creative exploration and ideation - COMPLETED"
+
+      - id: "research"
+        name: "Research"
+        agent: "analyst"
+        command: "/bmad:bmm:workflows:research"
+        status: "_bmad-output/planning-artifacts/research/technical-data-sources-planfoy-research-2026-01-10.md"
+        note: "Technical and competitive analysis - COMPLETED"
+
+      - id: "product-brief"
+        name: "Product Brief"
+        agent: "analyst"
+        command: "/bmad:bmm:workflows:create-product-brief"
+        status: "_bmad-output/planning-artifacts/product-brief-meteo-score-2026-01-10.md"
+        note: "Strategic product planning - COMPLETED"
+        completed: "2026-01-10"
+
+  # ===== PHASE 2: Planning =====
+  - phase: 2
+    phase_name: "Planning"
+    workflows:
+      - id: "prd"
+        name: "Product Requirements Document"
+        agent: "pm"
+        command: "/bmad:bmm:workflows:create-prd"
+        status: "required"
+        note: "Complete PRD with functional and non-functional requirements"
+
+      - id: "ux-design"
+        name: "UX Design"
+        agent: "ux-designer"
+        command: "/bmad:bmm:workflows:create-ux-design"
+        status: "conditional"
+        condition: "if_has_ui"
+        note: "Required for web platform with user interface"
+
+  # ===== PHASE 3: Solutioning =====
+  - phase: 3
+    phase_name: "Solutioning"
+    workflows:
+      - id: "architecture"
+        name: "System Architecture"
+        agent: "architect"
+        command: "/bmad:bmm:workflows:create-architecture"
+        status: "_bmad-output/planning-artifacts/architecture-meteo-score-2026-01-10.md"
+        note: "Complete system design for greenfield project - COMPLETED"
+        completed: "2026-01-10"
+
+      - id: "epics-and-stories"
+        name: "Epics and Stories"
+        agent: "pm"
+        command: "/bmad:bmm:workflows:create-epics-and-stories"
+        status: "required"
+        note: "Break down PRD into implementable epics and stories"
+
+      - id: "test-design"
+        name: "Test Design"
+        agent: "tea"
+        command: "/bmad:bmm:workflows:testarch-test-design"
+        status: "optional"
+        note: "System-level testability review"
+
+      - id: "implementation-readiness"
+        name: "Implementation Readiness Check"
+        agent: "architect"
+        command: "/bmad:bmm:workflows:check-implementation-readiness"
+        status: "required"
+        note: "Validates PRD + Architecture + Epics before implementation"
+
+  # ===== PHASE 4: Implementation =====
+  - phase: 4
+    phase_name: "Implementation"
+    workflows:
+      - id: "sprint-planning"
+        name: "Sprint Planning"
+        agent: "sm"
+        command: "/bmad:bmm:workflows:sprint-planning"
+        status: "required"
+        note: "Creates sprint-status.yaml - subsequent work tracked there"
