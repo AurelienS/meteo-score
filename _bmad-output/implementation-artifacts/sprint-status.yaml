@@ -41,8 +41,8 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # Epic 1: Platform Foundation & Infrastructure Setup (Sprint 0 / Foundation Sprint)
-  epic-1: backlog
-  1-1-initialize-custom-project-structure: backlog
+  epic-1: in-progress
+  1-1-initialize-custom-project-structure: ready-for-dev
   1-2-setup-docker-compose-infrastructure: backlog
   1-3-configure-timescaledb-with-hypertables: backlog
   1-4-setup-backend-api-skeleton-with-fastapi: backlog
