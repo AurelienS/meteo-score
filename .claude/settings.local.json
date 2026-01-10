@@ -7,7 +7,9 @@
       "Bash(cat:*)",
       "Bash(/home/fly/dev/meteo-score/_bmad-output/planning-artifacts/ux-design-specification.md)",
       "SlashCommand(/bmad:bmm:workflows:create-architecture)",
-      "Skill(bmad:bmm:workflows:generate-project-context)"
+      "Skill(bmad:bmm:workflows:generate-project-context)",
+      "Skill(bmad:bmm:workflows:create-epics-and-stories)",
+      "Skill(bmad:bmm:workflows:check-implementation-readiness)"
     ],
     "deny": [],
     "ask": []

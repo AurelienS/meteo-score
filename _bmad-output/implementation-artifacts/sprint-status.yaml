@@ -1,0 +1,85 @@
+# generated: 2026-01-11
+# project: meteo-score
+# project_key: meteo-score
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-11
+project: meteo-score
+project_key: meteo-score
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Platform Foundation & Infrastructure Setup (Sprint 0 / Foundation Sprint)
+  epic-1: backlog
+  1-1-initialize-custom-project-structure: backlog
+  1-2-setup-docker-compose-infrastructure: backlog
+  1-3-configure-timescaledb-with-hypertables: backlog
+  1-4-setup-backend-api-skeleton-with-fastapi: backlog
+  1-5-setup-frontend-application-with-solid-js: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Automated Weather Data Collection Pipeline
+  epic-2: backlog
+  2-1-implement-basecollector-interface-and-core-data-models: backlog
+  2-2-implement-meteo-parapente-forecast-collector-with-tdd: backlog
+  2-3-implement-arome-forecast-collector-grib2-parsing: backlog
+  2-4-implement-romma-observation-collector-beacon-scraping: backlog
+  2-5-implement-ffvl-observation-collector-beacon-scraping: backlog
+  2-6-setup-apscheduler-for-automated-collection: backlog
+  2-7-implement-error-handling-retry-logic-and-data-validation: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Forecast Accuracy Analysis Engine
+  epic-3: backlog
+  3-1-forecast-observation-matching-engine: backlog
+  3-2-deviation-calculation-logic: backlog
+  3-3-statistical-metrics-calculator-mae-bias: backlog
+  3-4-timescaledb-continuous-aggregates: backlog
+  3-5-minimum-data-threshold-logic: backlog
+  3-6-analysis-api-endpoints: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Model Comparison Web Visualization Platform
+  epic-4: backlog
+  4-1-solid-js-frontend-project-setup: backlog
+  4-2-site-selection-and-parameter-controls: backlog
+  4-3-model-comparison-table-component: backlog
+  4-4-bias-characterization-card: backlog
+  4-5-accuracy-time-series-chart-d3-js: backlog
+  4-6-data-freshness-and-sample-size-indicators: backlog
+  4-7-responsive-layout-and-mobile-optimization: backlog
+  4-8-api-integration-with-error-handling: backlog
+  4-9-methodology-and-transparency-page: backlog
+  4-10-production-build-and-docker-integration: backlog
+  epic-4-retrospective: optional
