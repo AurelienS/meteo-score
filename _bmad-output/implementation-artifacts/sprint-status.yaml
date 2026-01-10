@@ -43,7 +43,7 @@ development_status:
   # Epic 1: Platform Foundation & Infrastructure Setup (Sprint 0 / Foundation Sprint)
   epic-1: in-progress
   1-1-initialize-custom-project-structure: done
-  1-2-setup-docker-compose-infrastructure: backlog
+  1-2-setup-docker-compose-infrastructure: done
   1-3-configure-timescaledb-with-hypertables: backlog
   1-4-setup-backend-api-skeleton-with-fastapi: backlog
   1-5-setup-frontend-application-with-solid-js: backlog

@@ -98,6 +98,51 @@ Access the application at:
 - Backend API: http://localhost:8000
 - API Docs: http://localhost:8000/docs
 
+### 7. Docker Compose Setup (Recommended)
+
+Run all services with Docker Compose for full infrastructure:
+
+**⚠️ Note:** Full application functionality requires:
+- Story 1.3: Database schema and migrations
+- Story 1.4: Backend API implementation (currently stub for healthcheck only)
+- Story 1.5: Frontend components (currently basic Solid.js template)
+
+The infrastructure (containers, networking, volumes) is fully configured and operational.
+
+**Start all services:**
+```bash
+docker-compose up -d
+```
+
+**View logs:**
+```bash
+docker-compose logs -f
+docker-compose logs -f backend  # Specific service
+```
+
+**Stop services:**
+```bash
+docker-compose down
+```
+
+**Rebuild and restart:**
+```bash
+docker-compose up -d --build
+```
+
+**Execute commands in containers:**
+```bash
+docker-compose exec backend bash
+docker-compose exec postgres psql -U meteo_user -d meteo_score
+```
+
+**Service URLs:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
+- Adminer (DB UI): http://localhost:8080
+- Traefik Dashboard: http://localhost:8888
+
 ## Project Structure
 
 ```

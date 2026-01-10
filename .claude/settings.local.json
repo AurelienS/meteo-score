@@ -11,7 +11,12 @@
       "Skill(bmad:bmm:workflows:create-epics-and-stories)",
       "Skill(bmad:bmm:workflows:check-implementation-readiness)",
       "Bash(tree:*)",
-      "Bash(/home/fly/dev/meteo-score/verify-structure.sh:*)"
+      "Bash(/home/fly/dev/meteo-score/verify-structure.sh:*)",
+      "Skill(bmad:bmm:workflows:create-story)",
+      "Skill(bmad:bmm:workflows:dev-story)",
+      "Bash(docker-compose config:*)",
+      "Skill(bmad:bmm:workflows:code-review)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []
