@@ -9,7 +9,9 @@
       "SlashCommand(/bmad:bmm:workflows:create-architecture)",
       "Skill(bmad:bmm:workflows:generate-project-context)",
       "Skill(bmad:bmm:workflows:create-epics-and-stories)",
-      "Skill(bmad:bmm:workflows:check-implementation-readiness)"
+      "Skill(bmad:bmm:workflows:check-implementation-readiness)",
+      "Bash(tree:*)",
+      "Bash(/home/fly/dev/meteo-score/verify-structure.sh:*)"
     ],
     "deny": [],
     "ask": []
