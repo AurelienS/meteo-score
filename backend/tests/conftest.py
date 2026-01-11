@@ -19,6 +19,7 @@ from typing import Generator
 
 import pytest
 import pytest_asyncio
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -189,3 +190,64 @@ def passy_site_data() -> dict:
         "longitude": Decimal("6.700000"),
         "altitude": 1360,
     }
+
+
+@pytest_asyncio.fixture
+async def test_app(test_engine: AsyncEngine):
+    """Create FastAPI app with test database dependency override.
+
+    Provides a test app that uses the test database instead of production.
+    """
+    from core.database import get_db
+    from main import app
+
+    async_session = async_sessionmaker(
+        bind=test_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+        autocommit=False,
+        autoflush=False,
+    )
+
+    async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
+        async with async_session() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+
+    # Override the dependency
+    app.dependency_overrides[get_db] = override_get_db
+
+    yield app
+
+    # Clean up
+    app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def test_client(test_app) -> AsyncGenerator[AsyncClient, None]:
+    """Create async test client for API testing.
+
+    Uses test database via dependency override.
+    Clears rate limiter state before each test.
+    """
+    # Clear rate limiter state before each test
+    from main import request_counts
+    request_counts.clear()
+
+    # Clear settings cache to ensure consistent rate limit
+    from core.config import get_settings
+    get_settings.cache_clear()
+
+    async with AsyncClient(
+        transport=ASGITransport(app=test_app),
+        base_url="http://test",
+        follow_redirects=True,
+    ) as client:
+        yield client
+
+    # Clean up rate limiter state after test
+    request_counts.clear()
