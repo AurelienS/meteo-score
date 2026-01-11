@@ -16,7 +16,12 @@
       "Skill(bmad:bmm:workflows:dev-story)",
       "Bash(docker-compose config:*)",
       "Skill(bmad:bmm:workflows:code-review)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Skill(bmad:bmm:workflows:sprint-status)",
+      "Bash(DATABASE_URL=\"sqlite+aiosqlite:///:memory:\" python -m pytest:*)",
+      "Bash(DATABASE_URL=\"sqlite+aiosqlite:///:memory:\" python3 -m pytest:*)",
+      "Bash(pip install:*)",
+      "Bash(DATABASE_URL=sqlite+aiosqlite:///:memory: python3 -m pytest:*)"
     ],
     "deny": [],
     "ask": []
