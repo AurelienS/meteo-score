@@ -29,7 +29,11 @@
       "Bash(timeout 60 python3 -m pytest:*)",
       "Bash(timeout 120 python3 -m pytest:*)",
       "Bash(echo:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(timeout 15 npm run dev:*)",
+      "Bash(npm run lint)",
+      "Bash(timeout 10 npm run dev)"
     ],
     "deny": [],
     "ask": []
