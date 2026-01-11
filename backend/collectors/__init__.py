@@ -2,11 +2,13 @@
 
 Exports:
     - BaseCollector: Abstract base class for all collectors
+    - MeteoParapenteCollector: Meteo-Parapente JSON API collector
     - Utilities: HttpClient, retry decorator, date parsing
     - Exceptions: CollectorError, HttpClientError, RetryExhaustedError
 """
 
 from backend.collectors.base import BaseCollector
+from backend.collectors.meteo_parapente import MeteoParapenteCollector
 from backend.collectors.utils import (
     BASE_DELAY,
     DEFAULT_TIMEOUT,
@@ -25,6 +27,8 @@ from backend.collectors.utils import (
 __all__ = [
     # Base class
     "BaseCollector",
+    # Collectors
+    "MeteoParapenteCollector",
     # HTTP client
     "HttpClient",
     # Exceptions

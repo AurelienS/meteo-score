@@ -36,7 +36,13 @@
       "Bash(timeout 10 npm run dev)",
       "Bash(source venv/bin/activate)",
       "Bash(docker exec:*)",
-      "Bash(PYTHONPATH=/home/fly/dev/meteo-score python3:*)"
+      "Bash(PYTHONPATH=/home/fly/dev/meteo-score python3:*)",
+      "WebFetch(domain:data0.meteo-parapente.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(curl:*)",
+      "Bash(PYTHONPATH=/home/fly/dev/meteo-score python -m pytest:*)",
+      "Bash(PYTHONPATH=. python3 -m pytest:*)",
+      "Bash(PYTHONPATH=/home/fly/dev/meteo-score/backend python3:*)"
     ],
     "deny": [],
     "ask": []
