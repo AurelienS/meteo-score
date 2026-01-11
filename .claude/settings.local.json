@@ -33,7 +33,10 @@
       "Bash(npm run type-check:*)",
       "Bash(timeout 15 npm run dev:*)",
       "Bash(npm run lint)",
-      "Bash(timeout 10 npm run dev)"
+      "Bash(timeout 10 npm run dev)",
+      "Bash(source venv/bin/activate)",
+      "Bash(docker exec:*)",
+      "Bash(PYTHONPATH=/home/fly/dev/meteo-score python3:*)"
     ],
     "deny": [],
     "ask": []

@@ -5,9 +5,12 @@ Exports:
     - Database utilities: get_db, get_engine, test_connection, close_engine
     - ORM models: Base, Site, Model, Parameter, Deviation
     - Pydantic schemas: SiteResponse, ModelResponse, ParameterResponse, etc.
+    - Data models: ForecastData, ObservationData
+    - Deviation engine: calculate_deviation
 """
 
 from core.config import Settings, get_settings, settings
+from core.data_models import ForecastData, ObservationData
 from core.database import (
     close_engine,
     get_async_session_factory,
@@ -15,6 +18,7 @@ from core.database import (
     get_engine,
     test_connection,
 )
+from core.deviation_engine import calculate_deviation
 from core.models import Base, Deviation, Model, Parameter, Site
 from core.schemas import (
     HealthResponse,
@@ -49,4 +53,9 @@ __all__ = [
     "MetaResponse",
     "PaginatedResponse",
     "HealthResponse",
+    # Data transfer objects
+    "ForecastData",
+    "ObservationData",
+    # Deviation engine
+    "calculate_deviation",
 ]

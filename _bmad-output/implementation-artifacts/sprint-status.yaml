@@ -50,8 +50,8 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Automated Weather Data Collection Pipeline
-  epic-2: backlog
-  2-1-implement-basecollector-interface-and-core-data-models: backlog
+  epic-2: in-progress
+  2-1-implement-basecollector-interface-and-core-data-models: done
   2-2-implement-meteo-parapente-forecast-collector-with-tdd: backlog
   2-3-implement-arome-forecast-collector-grib2-parsing: backlog
   2-4-implement-romma-observation-collector-beacon-scraping: backlog
