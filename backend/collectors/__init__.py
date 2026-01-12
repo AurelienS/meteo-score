@@ -4,13 +4,17 @@ Exports:
     - BaseCollector: Abstract base class for all collectors
     - MeteoParapenteCollector: Meteo-Parapente JSON API collector
     - AROMECollector: AROME GRIB2 forecast collector
+    - ROMMaCollector: ROMMA beacon HTML scraping collector
+    - FFVLCollector: FFVL beacon HTML scraping collector
     - Utilities: HttpClient, retry decorator, date parsing
     - Exceptions: CollectorError, HttpClientError, RetryExhaustedError
 """
 
 from backend.collectors.arome import AROMECollector
 from backend.collectors.base import BaseCollector
+from backend.collectors.ffvl import FFVLCollector
 from backend.collectors.meteo_parapente import MeteoParapenteCollector
+from backend.collectors.romma import ROMMaCollector
 from backend.collectors.utils import (
     BASE_DELAY,
     DEFAULT_TIMEOUT,
@@ -32,6 +36,8 @@ __all__ = [
     # Collectors
     "MeteoParapenteCollector",
     "AROMECollector",
+    "ROMMaCollector",
+    "FFVLCollector",
     # HTTP client
     "HttpClient",
     # Exceptions

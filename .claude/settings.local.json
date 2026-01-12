@@ -45,7 +45,12 @@
       "Bash(PYTHONPATH=/home/fly/dev/meteo-score/backend python3:*)",
       "WebFetch(domain:portail-api.meteofrance.fr)",
       "WebFetch(domain:confluence-meteofrance.atlassian.net)",
-      "Skill(bmad:bmm:workflows:workflow-status)"
+      "Skill(bmad:bmm:workflows:workflow-status)",
+      "WebFetch(domain:www.romma.fr)",
+      "WebFetch(domain:www.data.gouv.fr)",
+      "WebFetch(domain:data.ffvl.fr)",
+      "WebFetch(domain:www.balisemeteo.com)",
+      "WebFetch(domain:federation.ffvl.fr)"
     ],
     "deny": [],
     "ask": []
