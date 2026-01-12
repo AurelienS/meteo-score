@@ -21,6 +21,7 @@ from fastapi.responses import JSONResponse
 from api.routes import api_router, health_router
 from core.config import get_settings, settings
 from core.database import close_engine
+from scheduler.scheduler import start_scheduler, stop_scheduler
 
 # Rate limiting state (simple in-memory implementation)
 request_counts: dict[str, list[float]] = defaultdict(list)
@@ -33,8 +34,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager.
 
     Handles startup and shutdown events:
-    - Startup: Initialize resources (currently none needed)
-    - Shutdown: Close database engine and release connections
+    - Startup: Start scheduler for automated data collection
+    - Shutdown: Stop scheduler and close database engine
 
     Args:
         app: FastAPI application instance.
@@ -43,8 +44,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         None during application runtime.
     """
     # Startup
+    await start_scheduler()
     yield
     # Shutdown
+    await stop_scheduler()
     await close_engine()
 
 

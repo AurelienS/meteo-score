@@ -12,7 +12,7 @@ The deviation engine is intentionally kept simple and stateless to:
 
 from decimal import Decimal
 
-from backend.core.data_models import ForecastData, ObservationData
+from core.data_models import ForecastData, ObservationData
 
 
 def calculate_deviation(

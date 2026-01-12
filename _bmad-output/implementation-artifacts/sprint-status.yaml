@@ -56,7 +56,7 @@ development_status:
   2-3-implement-arome-forecast-collector-grib2-parsing: done
   2-4-implement-romma-observation-collector-beacon-scraping: done
   2-5-implement-ffvl-observation-collector-beacon-scraping: done
-  2-6-setup-apscheduler-for-automated-collection: backlog
+  2-6-setup-apscheduler-for-automated-collection: done
   2-7-implement-error-handling-retry-logic-and-data-validation: backlog
   epic-2-retrospective: optional
 

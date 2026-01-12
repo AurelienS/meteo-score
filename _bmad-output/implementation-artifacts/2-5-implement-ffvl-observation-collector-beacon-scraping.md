@@ -210,7 +210,17 @@ Claude Opus 4.5
 **Modified Files:**
 - `backend/collectors/__init__.py` - Add FFVLCollector export
 
+### Code Review Fixes (2026-01-12)
+
+1. **M5/L1 Fixed**: Removed unused imports (`Any` in ffvl.py, `MagicMock` in tests)
+2. **M2/M3 Fixed**: Added cardinal-only direction fallback using `FRENCH_CARDINAL_TO_DEGREES`
+3. **M4 Documented**: Added docstring explaining wind_max extraction is intentionally omitted
+4. **L3 Fixed**: Added TODO comment for French timezone conversion
+5. **Tests Added**: 2 new tests for cardinal-only direction fallback (64 tests total)
+6. **M1 Note**: HttpClient wrapper is used (which uses httpx internally) - architecture consistency
+
 ## Change Log
 
 - 2026-01-12: Story created from epics, ready for development
 - 2026-01-12: Implementation complete - 62 tests passing, 85% coverage, FFVLCollector ready for use
+- 2026-01-12: Code review fixes applied - 64 tests passing, cardinal fallback added

@@ -10,12 +10,12 @@ Exports:
     - Exceptions: CollectorError, HttpClientError, RetryExhaustedError
 """
 
-from backend.collectors.arome import AROMECollector
-from backend.collectors.base import BaseCollector
-from backend.collectors.ffvl import FFVLCollector
-from backend.collectors.meteo_parapente import MeteoParapenteCollector
-from backend.collectors.romma import ROMMaCollector
-from backend.collectors.utils import (
+from collectors.arome import AROMECollector
+from collectors.base import BaseCollector
+from collectors.ffvl import FFVLCollector
+from collectors.meteo_parapente import MeteoParapenteCollector
+from collectors.romma import ROMMaCollector
+from collectors.utils import (
     BASE_DELAY,
     DEFAULT_TIMEOUT,
     MAX_DELAY,

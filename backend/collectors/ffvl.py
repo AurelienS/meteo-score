@@ -31,14 +31,14 @@ import time
 from datetime import datetime, timedelta, timezone
 from decimal import ROUND_HALF_UP, Decimal
 
-from backend.collectors.base import BaseCollector
-from backend.collectors.utils import (
+from collectors.base import BaseCollector
+from collectors.utils import (
     HttpClient,
     HttpClientError,
     RetryExhaustedError,
     retry_with_backoff,
 )
-from backend.core.data_models import ForecastData, ObservationData
+from core.data_models import ForecastData, ObservationData
 
 logger = logging.getLogger(__name__)
 

@@ -13,7 +13,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import List
 
-from backend.core.data_models import ForecastData, ObservationData
+from core.data_models import ForecastData, ObservationData
 
 
 class BaseCollector(ABC):

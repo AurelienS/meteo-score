@@ -35,14 +35,14 @@ from typing import Any
 
 import xarray as xr
 
-from backend.collectors.base import BaseCollector
-from backend.collectors.utils import (
+from collectors.base import BaseCollector
+from collectors.utils import (
     HttpClient,
     HttpClientError,
     RetryExhaustedError,
     retry_with_backoff,
 )
-from backend.core.data_models import ForecastData
+from core.data_models import ForecastData
 
 logger = logging.getLogger(__name__)
 
