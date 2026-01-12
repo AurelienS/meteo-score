@@ -42,7 +42,10 @@
       "Bash(curl:*)",
       "Bash(PYTHONPATH=/home/fly/dev/meteo-score python -m pytest:*)",
       "Bash(PYTHONPATH=. python3 -m pytest:*)",
-      "Bash(PYTHONPATH=/home/fly/dev/meteo-score/backend python3:*)"
+      "Bash(PYTHONPATH=/home/fly/dev/meteo-score/backend python3:*)",
+      "WebFetch(domain:portail-api.meteofrance.fr)",
+      "WebFetch(domain:confluence-meteofrance.atlassian.net)",
+      "Skill(bmad:bmm:workflows:workflow-status)"
     ],
     "deny": [],
     "ask": []

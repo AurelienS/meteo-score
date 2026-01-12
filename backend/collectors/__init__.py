@@ -3,10 +3,12 @@
 Exports:
     - BaseCollector: Abstract base class for all collectors
     - MeteoParapenteCollector: Meteo-Parapente JSON API collector
+    - AROMECollector: AROME GRIB2 forecast collector
     - Utilities: HttpClient, retry decorator, date parsing
     - Exceptions: CollectorError, HttpClientError, RetryExhaustedError
 """
 
+from backend.collectors.arome import AROMECollector
 from backend.collectors.base import BaseCollector
 from backend.collectors.meteo_parapente import MeteoParapenteCollector
 from backend.collectors.utils import (
@@ -29,6 +31,7 @@ __all__ = [
     "BaseCollector",
     # Collectors
     "MeteoParapenteCollector",
+    "AROMECollector",
     # HTTP client
     "HttpClient",
     # Exceptions
