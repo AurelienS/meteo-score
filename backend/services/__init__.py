@@ -4,8 +4,19 @@ This module contains service classes that implement core business logic:
 - MatchingService: Matches forecasts with observations within time tolerance
 - DeviationService: Calculates deviations from forecast-observation pairs
 - MetricsService: Calculates statistical accuracy metrics (MAE, bias, CI)
+- AggregateService: Queries TimescaleDB continuous aggregates
+- ConfidenceService: Evaluates data reliability based on sample size
 """
 
+from services.aggregate_service import (
+    AggregateMetrics,
+    AggregateService,
+)
+from services.confidence_service import (
+    ConfidenceLevel,
+    ConfidenceMetadata,
+    ConfidenceService,
+)
 from services.deviation_service import (
     DeviationService,
     _normalize_datetime as normalize_datetime_for_db,
@@ -23,6 +34,11 @@ from services.metrics_service import (
 
 __all__ = [
     "AccuracyMetrics",
+    "AggregateMetrics",
+    "AggregateService",
+    "ConfidenceLevel",
+    "ConfidenceMetadata",
+    "ConfidenceService",
     "DeviationService",
     "MatchingService",
     "MetricsService",
