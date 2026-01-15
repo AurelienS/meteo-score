@@ -388,6 +388,7 @@ class ForecastObservationPair(Base):
         forecast_value: The predicted value.
         observed_value: The actual observed value.
         time_diff_minutes: Actual time difference for quality tracking.
+        processed_at: Timestamp when pair was processed into deviation (NULL if not yet).
         created_at: Timestamp when pair was created.
     """
 
@@ -431,6 +432,11 @@ class ForecastObservationPair(Base):
     forecast_value: Mapped[Decimal] = mapped_column(DECIMAL(10, 2), nullable=False)
     observed_value: Mapped[Decimal] = mapped_column(DECIMAL(10, 2), nullable=False)
     time_diff_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
+    processed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        default=None,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
