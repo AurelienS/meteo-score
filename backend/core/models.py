@@ -11,6 +11,7 @@ Tables:
     - observations: Actual observed values from weather beacons
     - forecast_observation_pairs: Staging table for matched forecast-observation pairs
     - deviations: Time-series data storing forecast vs observation deviations (hypertable)
+    - accuracy_metrics: Calculated statistical metrics (MAE, bias, CI) per model/site/param/horizon
 """
 
 from datetime import datetime
@@ -465,4 +466,107 @@ class ForecastObservationPair(Base):
         return (
             f"<ForecastObservationPair(id={self.id}, forecast={self.forecast_id}, "
             f"observation={self.observation_id}, horizon={self.horizon}h)>"
+        )
+
+
+class AccuracyMetric(Base):
+    """Calculated statistical accuracy metrics for forecast evaluation.
+
+    Stores aggregated accuracy statistics (MAE, bias, confidence intervals)
+    for each unique combination of model, site, parameter, and forecast horizon.
+    Metrics are calculated from deviations in the deviations hypertable.
+
+    Confidence levels indicate data reliability:
+    - 'insufficient': < 30 samples, not statistically reliable
+    - 'preliminary': 30-89 samples, trends visible but may change
+    - 'validated': >= 90 samples, statistically significant
+
+    Attributes:
+        id: Primary key, auto-incremented.
+        model_id: Foreign key to models table.
+        site_id: Foreign key to sites table.
+        parameter_id: Foreign key to parameters table.
+        horizon: Forecast lead time in hours.
+        mae: Mean Absolute Error = mean(abs(deviation)).
+        bias: Systematic error = mean(deviation), positive = underestimate.
+        std_dev: Standard deviation of deviations.
+        sample_size: Number of deviations used in calculation.
+        confidence_level: Data reliability ('insufficient', 'preliminary', 'validated').
+        ci_lower: 95% confidence interval lower bound for bias.
+        ci_upper: 95% confidence interval upper bound for bias.
+        min_deviation: Minimum deviation value in sample.
+        max_deviation: Maximum deviation value in sample.
+        calculated_at: Timestamp when metrics were calculated.
+        site: Relationship to Site object.
+        model: Relationship to Model object.
+        parameter: Relationship to Parameter object.
+    """
+
+    __tablename__ = "accuracy_metrics"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    model_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("models.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    site_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("sites.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    parameter_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("parameters.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    horizon: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    # Core metrics
+    mae: Mapped[Decimal] = mapped_column(DECIMAL(10, 4), nullable=False)
+    bias: Mapped[Decimal] = mapped_column(DECIMAL(10, 4), nullable=False)
+    std_dev: Mapped[Decimal] = mapped_column(DECIMAL(10, 4), nullable=False)
+    sample_size: Mapped[int] = mapped_column(Integer, nullable=False)
+    confidence_level: Mapped[str] = mapped_column(String(20), nullable=False)
+
+    # Confidence interval bounds
+    ci_lower: Mapped[Optional[Decimal]] = mapped_column(
+        DECIMAL(10, 4), nullable=True
+    )
+    ci_upper: Mapped[Optional[Decimal]] = mapped_column(
+        DECIMAL(10, 4), nullable=True
+    )
+
+    # Range statistics
+    min_deviation: Mapped[Decimal] = mapped_column(DECIMAL(10, 4), nullable=False)
+    max_deviation: Mapped[Decimal] = mapped_column(DECIMAL(10, 4), nullable=False)
+
+    # Timestamp
+    calculated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    # Relationships
+    site: Mapped["Site"] = relationship("Site", lazy="selectin")
+    model: Mapped["Model"] = relationship("Model", lazy="selectin")
+    parameter: Mapped["Parameter"] = relationship("Parameter", lazy="selectin")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "model_id", "site_id", "parameter_id", "horizon",
+            name="uq_accuracy_metrics_unique"
+        ),
+        Index("idx_metrics_site_param", "site_id", "parameter_id"),
+        Index("idx_metrics_confidence", "confidence_level"),
+        Index("idx_metrics_model_horizon", "model_id", "horizon"),
+    )
+
+    def __repr__(self) -> str:
+        """Return string representation of AccuracyMetric."""
+        return (
+            f"<AccuracyMetric(id={self.id}, model={self.model_id}, "
+            f"site={self.site_id}, param={self.parameter_id}, "
+            f"horizon={self.horizon}h, mae={self.mae}, bias={self.bias})>"
         )
