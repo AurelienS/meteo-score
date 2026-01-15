@@ -5,6 +5,7 @@ This module aggregates all API routers under a common prefix.
 
 from fastapi import APIRouter
 
+from api.routes.analysis import router as analysis_router
 from api.routes.health import router as health_router
 from api.routes.metrics import router as metrics_router
 from api.routes.models import router as models_router
@@ -21,5 +22,6 @@ api_router.include_router(models_router)
 api_router.include_router(parameters_router)
 api_router.include_router(scheduler_router)
 api_router.include_router(metrics_router)
+api_router.include_router(analysis_router)
 
 __all__ = ["api_router", "health_router"]

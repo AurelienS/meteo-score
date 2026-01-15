@@ -56,7 +56,8 @@
       "Bash(docker compose exec:*)",
       "Bash(pip3:*)",
       "Bash(docker info:*)",
-      "Bash(docker compose:*)"
+      "Bash(docker compose:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
