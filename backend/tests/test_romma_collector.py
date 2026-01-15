@@ -13,9 +13,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from backend.collectors.romma import ROMMaCollector
-from backend.collectors.utils import HttpClientError, RetryExhaustedError
-from backend.core.data_models import ObservationData
+from collectors.romma import ROMMaCollector
+from collectors.utils import HttpClientError, RetryExhaustedError
+from core.data_models import ObservationData
 
 
 # =============================================================================
@@ -195,7 +195,7 @@ class TestROMMaCollectorStructure:
 
     def test_inherits_from_base_collector(self, collector):
         """Verify ROMMaCollector inherits from BaseCollector."""
-        from backend.collectors.base import BaseCollector
+        from collectors.base import BaseCollector
         assert isinstance(collector, BaseCollector)
 
     def test_has_required_class_attributes(self, collector):

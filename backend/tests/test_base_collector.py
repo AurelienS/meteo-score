@@ -16,8 +16,8 @@ from unittest.mock import patch
 import httpx
 import pytest
 
-from backend.collectors.base import BaseCollector
-from backend.collectors.utils import (
+from collectors.base import BaseCollector
+from collectors.utils import (
     CollectorError,
     HttpClient,
     HttpClientError,
@@ -27,8 +27,8 @@ from backend.collectors.utils import (
     parse_unix_timestamp,
     retry_with_backoff,
 )
-from backend.core.data_models import ForecastData, ObservationData
-from backend.core.deviation_engine import calculate_deviation
+from core.data_models import ForecastData, ObservationData
+from core.deviation_engine import calculate_deviation
 
 
 # =============================================================================

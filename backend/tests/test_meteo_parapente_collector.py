@@ -140,14 +140,14 @@ class TestMeteoParapenteCollectorStructure:
 
     def test_collector_inherits_base_collector(self):
         """MeteoParapenteCollector must inherit from BaseCollector."""
-        from backend.collectors.base import BaseCollector
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.base import BaseCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         assert issubclass(MeteoParapenteCollector, BaseCollector)
 
     def test_collector_has_required_attributes(self):
         """Collector must have name, source, and API_ENDPOINT attributes."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         assert hasattr(collector, "name")
@@ -159,7 +159,7 @@ class TestMeteoParapenteCollectorStructure:
 
     def test_collector_has_collect_forecast_method(self):
         """Collector must implement async collect_forecast method."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         assert hasattr(collector, "collect_forecast")
@@ -181,8 +181,8 @@ class TestResponseParsing:
         self, valid_api_response
     ):
         """Valid response should return list of ForecastData objects."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
-        from backend.core.data_models import ForecastData
+        from collectors.meteo_parapente import MeteoParapenteCollector
+        from core.data_models import ForecastData
 
         collector = MeteoParapenteCollector()
 
@@ -201,7 +201,7 @@ class TestResponseParsing:
     @pytest.mark.asyncio
     async def test_parse_extracts_all_hours(self, valid_api_response):
         """Parser should extract data for all hours in response."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
 
@@ -222,7 +222,7 @@ class TestResponseParsing:
     @pytest.mark.asyncio
     async def test_forecast_data_has_correct_site_id(self, valid_api_response):
         """ForecastData should have the correct site_id."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         test_site_id = 42
@@ -249,7 +249,7 @@ class TestWindExtraction:
     @pytest.mark.asyncio
     async def test_wind_speed_calculated_correctly(self, valid_api_response):
         """Wind speed should be sqrt(u² + v²) converted to km/h."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
 
@@ -273,7 +273,7 @@ class TestWindExtraction:
     @pytest.mark.asyncio
     async def test_wind_direction_calculated_correctly(self, valid_api_response):
         """Wind direction should be meteorological convention (where wind comes FROM)."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
 
@@ -293,7 +293,7 @@ class TestWindExtraction:
 
     def test_wind_calculation_pure_north(self):
         """Wind from pure north (u=0, v<0) should give direction 0° or 360°."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         direction = collector._calculate_wind_direction(u=0.0, v=-5.0)
@@ -301,7 +301,7 @@ class TestWindExtraction:
 
     def test_wind_calculation_pure_east(self):
         """Wind from pure east (u<0, v=0) should give direction 90°."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         direction = collector._calculate_wind_direction(u=-5.0, v=0.0)
@@ -309,7 +309,7 @@ class TestWindExtraction:
 
     def test_wind_calculation_pure_south(self):
         """Wind from pure south (u=0, v>0) should give direction 180°."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         direction = collector._calculate_wind_direction(u=0.0, v=5.0)
@@ -317,7 +317,7 @@ class TestWindExtraction:
 
     def test_wind_calculation_pure_west(self):
         """Wind from pure west (u>0, v=0) should give direction 270°."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         direction = collector._calculate_wind_direction(u=5.0, v=0.0)
@@ -325,7 +325,7 @@ class TestWindExtraction:
 
     def test_wind_speed_zero_when_calm(self):
         """Wind speed should be 0 when u=0 and v=0."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         speed = collector._calculate_wind_speed(u=0.0, v=0.0)
@@ -343,7 +343,7 @@ class TestTemperatureExtraction:
     @pytest.mark.asyncio
     async def test_temperature_extracted_from_surface(self, valid_api_response):
         """Temperature should be extracted from tc[0] (surface level)."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
 
@@ -365,7 +365,7 @@ class TestTemperatureExtraction:
     @pytest.mark.asyncio
     async def test_temperature_in_celsius(self, valid_api_response):
         """Temperature values should be in Celsius (reasonable range)."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
 
@@ -393,7 +393,7 @@ class TestForecastHorizon:
     @pytest.mark.asyncio
     async def test_horizon_calculated_from_valid_time(self, valid_api_response):
         """Horizon should be hours between forecast_run and valid_time."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         forecast_run = datetime(2026, 1, 11, 6, 0, tzinfo=timezone.utc)
@@ -415,7 +415,7 @@ class TestForecastHorizon:
     @pytest.mark.asyncio
     async def test_valid_time_parsed_correctly(self, valid_api_response):
         """Valid time should be parsed from hour key and date parameter."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         forecast_run = datetime(2026, 1, 11, 6, 0, tzinfo=timezone.utc)
@@ -443,8 +443,8 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_http_error_returns_empty_list(self):
         """HTTP errors should return empty list and log warning."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
-        from backend.collectors.utils import HttpClientError
+        from collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.utils import HttpClientError
 
         collector = MeteoParapenteCollector()
 
@@ -463,7 +463,7 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_json_parse_error_returns_empty_list(self):
         """JSON parsing errors should return empty list."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
 
@@ -480,7 +480,7 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_bad_status_returns_empty_list(self, response_bad_status):
         """Response with bad_format status should return empty list."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
 
@@ -497,7 +497,7 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_empty_data_returns_empty_list(self, response_empty_data):
         """Response with empty data section should return empty list."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
 
@@ -514,7 +514,7 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_missing_fields_handled_gracefully(self, response_missing_fields):
         """Missing optional fields should not cause crash."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
 
@@ -542,7 +542,7 @@ class TestDataValidation:
     @pytest.mark.asyncio
     async def test_aberrant_wind_speed_skipped(self):
         """Wind speed > 200 km/h should be skipped with warning."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
 
@@ -576,7 +576,7 @@ class TestDataValidation:
     @pytest.mark.asyncio
     async def test_aberrant_temperature_skipped(self):
         """Temperature outside -50 to +50°C should be skipped."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
 
@@ -609,7 +609,7 @@ class TestDataValidation:
 
     def test_validate_wind_speed_in_range(self):
         """Wind speed 0-200 km/h should be valid."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         assert collector._is_valid_value("wind_speed", Decimal("0")) is True
@@ -620,7 +620,7 @@ class TestDataValidation:
 
     def test_validate_wind_direction_in_range(self):
         """Wind direction 0-360° should be valid."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         assert collector._is_valid_value("wind_direction", Decimal("0")) is True
@@ -631,7 +631,7 @@ class TestDataValidation:
 
     def test_validate_temperature_in_range(self):
         """Temperature -50 to +50°C should be valid."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         assert collector._is_valid_value("temperature", Decimal("-50")) is True
@@ -651,7 +651,7 @@ class TestApiUrlConstruction:
 
     def test_build_api_url_with_coordinates(self):
         """API URL should include location parameter with lat,lon."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         url = collector._build_api_url(
@@ -668,7 +668,7 @@ class TestApiUrlConstruction:
 
     def test_build_api_url_uses_correct_endpoint(self):
         """API URL should use the correct base endpoint."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         url = collector._build_api_url(
@@ -691,7 +691,7 @@ class TestRequiredHeaders:
 
     def test_get_headers_includes_origin(self):
         """Headers should include origin: https://meteo-parapente.com."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         headers = collector._get_headers()
@@ -700,7 +700,7 @@ class TestRequiredHeaders:
 
     def test_get_headers_includes_referer(self):
         """Headers should include referer: https://meteo-parapente.com/."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         headers = collector._get_headers()
@@ -709,7 +709,7 @@ class TestRequiredHeaders:
 
     def test_get_headers_includes_user_agent(self):
         """Headers should include User-Agent identifying MétéoScore."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         headers = collector._get_headers()
@@ -729,7 +729,7 @@ class TestIdMapping:
     @pytest.mark.asyncio
     async def test_model_id_set_correctly(self, valid_api_response):
         """All ForecastData should have correct model_id for Meteo-Parapente."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
 
@@ -747,7 +747,7 @@ class TestIdMapping:
     @pytest.mark.asyncio
     async def test_parameter_ids_mapped_correctly(self, valid_api_response):
         """Parameter IDs should map to wind_speed=1, wind_direction=2, temperature=3."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
 
@@ -776,7 +776,7 @@ class TestCollectObservation:
     @pytest.mark.asyncio
     async def test_collect_observation_returns_empty_list(self):
         """collect_observation should return empty list (forecast-only source)."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         result = await collector.collect_observation(
@@ -798,7 +798,7 @@ class TestMissingCoordinates:
     @pytest.mark.asyncio
     async def test_missing_latitude_returns_empty_list(self):
         """Missing latitude should return empty list with warning."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         result = await collector.collect_forecast(
@@ -812,7 +812,7 @@ class TestMissingCoordinates:
     @pytest.mark.asyncio
     async def test_missing_longitude_returns_empty_list(self):
         """Missing longitude should return empty list with warning."""
-        from backend.collectors.meteo_parapente import MeteoParapenteCollector
+        from collectors.meteo_parapente import MeteoParapenteCollector
 
         collector = MeteoParapenteCollector()
         result = await collector.collect_forecast(

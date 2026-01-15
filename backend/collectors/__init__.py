@@ -6,8 +6,9 @@ Exports:
     - AROMECollector: AROME GRIB2 forecast collector
     - ROMMaCollector: ROMMA beacon HTML scraping collector
     - FFVLCollector: FFVL beacon HTML scraping collector
+    - CircuitBreaker: Circuit breaker pattern for API resilience
     - Utilities: HttpClient, retry decorator, date parsing
-    - Exceptions: CollectorError, HttpClientError, RetryExhaustedError
+    - Exceptions: CollectorError, HttpClientError, RetryExhaustedError, CircuitBreakerOpenError
 """
 
 from collectors.arome import AROMECollector
@@ -17,9 +18,14 @@ from collectors.meteo_parapente import MeteoParapenteCollector
 from collectors.romma import ROMMaCollector
 from collectors.utils import (
     BASE_DELAY,
+    CIRCUIT_COOLDOWN_SECONDS,
+    CIRCUIT_FAILURE_THRESHOLD,
     DEFAULT_TIMEOUT,
     MAX_DELAY,
     MAX_RETRIES,
+    CircuitBreaker,
+    CircuitBreakerOpenError,
+    CircuitBreakerState,
     CollectorError,
     HttpClient,
     HttpClientError,
@@ -38,12 +44,16 @@ __all__ = [
     "AROMECollector",
     "ROMMaCollector",
     "FFVLCollector",
+    # Circuit breaker
+    "CircuitBreaker",
+    "CircuitBreakerState",
     # HTTP client
     "HttpClient",
     # Exceptions
     "CollectorError",
     "HttpClientError",
     "RetryExhaustedError",
+    "CircuitBreakerOpenError",
     # Retry decorator
     "retry_with_backoff",
     # Date parsing utilities
@@ -55,4 +65,6 @@ __all__ = [
     "MAX_RETRIES",
     "BASE_DELAY",
     "MAX_DELAY",
+    "CIRCUIT_FAILURE_THRESHOLD",
+    "CIRCUIT_COOLDOWN_SECONDS",
 ]

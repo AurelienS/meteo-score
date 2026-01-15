@@ -2,6 +2,7 @@
 
 This module provides common utilities used across all collector implementations:
 - Exponential backoff retry decorator for resilient API calls
+- Circuit breaker pattern for failing external APIs
 - HTTP client wrapper with timeout and error handling
 - Date/time parsing utilities for various formats
 
@@ -11,7 +12,9 @@ across all weather data sources (AROME, Meteo-Parapente, ROMMA, FFVL).
 
 import asyncio
 import logging
+import time
 from datetime import datetime, timezone
+from enum import Enum
 from functools import wraps
 from typing import Any, Awaitable, Callable, TypeVar
 
@@ -22,6 +25,10 @@ DEFAULT_TIMEOUT = 30.0  # seconds
 MAX_RETRIES = 3
 BASE_DELAY = 1.0  # seconds
 MAX_DELAY = 60.0  # seconds
+
+# Circuit breaker defaults
+CIRCUIT_FAILURE_THRESHOLD = 5  # failures before opening
+CIRCUIT_COOLDOWN_SECONDS = 300  # 5 minutes
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +67,171 @@ class RetryExhaustedError(CollectorError):
         """
         super().__init__(message)
         self.last_exception = last_exception
+
+
+class CircuitBreakerOpenError(CollectorError):
+    """Exception raised when circuit breaker is open."""
+
+    def __init__(self, name: str, cooldown_remaining: float) -> None:
+        """Initialize CircuitBreakerOpenError.
+
+        Args:
+            name: Name of the circuit breaker.
+            cooldown_remaining: Seconds until circuit breaker allows retry.
+        """
+        super().__init__(
+            f"Circuit breaker '{name}' is open. "
+            f"Retry in {cooldown_remaining:.1f} seconds."
+        )
+        self.name = name
+        self.cooldown_remaining = cooldown_remaining
+
+
+class CircuitBreakerState(Enum):
+    """States of a circuit breaker."""
+
+    CLOSED = "closed"  # Normal operation, requests allowed
+    OPEN = "open"  # Failing, requests blocked
+    HALF_OPEN = "half_open"  # Testing if service recovered
+
+
+class CircuitBreaker:
+    """Circuit breaker pattern for external API resilience.
+
+    Prevents hammering failing APIs by tracking failures and temporarily
+    blocking requests when failure threshold is exceeded.
+
+    State transitions:
+    - CLOSED -> OPEN: After failure_threshold consecutive failures
+    - OPEN -> HALF_OPEN: After cooldown_seconds elapsed
+    - HALF_OPEN -> CLOSED: On successful request
+    - HALF_OPEN -> OPEN: On failed request
+
+    Example:
+        >>> breaker = CircuitBreaker("meteo_api")
+        >>> async def fetch():
+        ...     breaker.check()  # Raises if open
+        ...     try:
+        ...         result = await api_call()
+        ...         breaker.record_success()
+        ...         return result
+        ...     except Exception as e:
+        ...         breaker.record_failure()
+        ...         raise
+    """
+
+    def __init__(
+        self,
+        name: str,
+        failure_threshold: int = CIRCUIT_FAILURE_THRESHOLD,
+        cooldown_seconds: float = CIRCUIT_COOLDOWN_SECONDS,
+    ) -> None:
+        """Initialize circuit breaker.
+
+        Args:
+            name: Identifier for this circuit breaker (for logging).
+            failure_threshold: Failures before opening circuit.
+            cooldown_seconds: Seconds to wait before testing again.
+        """
+        self.name = name
+        self.failure_threshold = failure_threshold
+        self.cooldown_seconds = cooldown_seconds
+
+        self._state = CircuitBreakerState.CLOSED
+        self._failure_count = 0
+        self._last_failure_time: float | None = None
+        self._success_count = 0
+
+    @property
+    def state(self) -> CircuitBreakerState:
+        """Get current state, transitioning from OPEN to HALF_OPEN if cooldown elapsed."""
+        if self._state == CircuitBreakerState.OPEN:
+            if self._last_failure_time is not None:
+                elapsed = time.monotonic() - self._last_failure_time
+                if elapsed >= self.cooldown_seconds:
+                    self._state = CircuitBreakerState.HALF_OPEN
+                    logger.info(
+                        f"Circuit breaker '{self.name}' entering HALF_OPEN state "
+                        f"after {elapsed:.1f}s cooldown"
+                    )
+        return self._state
+
+    @property
+    def is_closed(self) -> bool:
+        """Check if circuit is closed (requests allowed)."""
+        return self.state == CircuitBreakerState.CLOSED
+
+    @property
+    def is_open(self) -> bool:
+        """Check if circuit is open (requests blocked)."""
+        return self.state == CircuitBreakerState.OPEN
+
+    def check(self) -> None:
+        """Check if request is allowed.
+
+        Raises:
+            CircuitBreakerOpenError: If circuit is open.
+        """
+        if self.state == CircuitBreakerState.OPEN:
+            elapsed = time.monotonic() - (self._last_failure_time or 0)
+            remaining = self.cooldown_seconds - elapsed
+            raise CircuitBreakerOpenError(self.name, max(0, remaining))
+
+    def record_success(self) -> None:
+        """Record a successful request."""
+        if self._state == CircuitBreakerState.HALF_OPEN:
+            logger.info(
+                f"Circuit breaker '{self.name}' closing after successful request"
+            )
+        self._state = CircuitBreakerState.CLOSED
+        self._failure_count = 0
+        self._success_count += 1
+
+    def record_failure(self) -> None:
+        """Record a failed request."""
+        self._failure_count += 1
+        self._last_failure_time = time.monotonic()
+
+        if self._state == CircuitBreakerState.HALF_OPEN:
+            # Single failure in half-open reopens the circuit
+            self._state = CircuitBreakerState.OPEN
+            logger.warning(
+                f"Circuit breaker '{self.name}' reopened after failure in HALF_OPEN state"
+            )
+        elif self._failure_count >= self.failure_threshold:
+            self._state = CircuitBreakerState.OPEN
+            logger.warning(
+                f"Circuit breaker '{self.name}' opened after "
+                f"{self._failure_count} consecutive failures"
+            )
+
+    def reset(self) -> None:
+        """Reset circuit breaker to initial state."""
+        self._state = CircuitBreakerState.CLOSED
+        self._failure_count = 0
+        self._last_failure_time = None
+        self._success_count = 0
+        logger.info(f"Circuit breaker '{self.name}' reset to CLOSED state")
+
+    def get_status(self) -> dict[str, Any]:
+        """Get circuit breaker status for monitoring.
+
+        Returns:
+            Dict with state, failure_count, and timing info.
+        """
+        status = {
+            "name": self.name,
+            "state": self.state.value,
+            "failure_count": self._failure_count,
+            "failure_threshold": self.failure_threshold,
+            "success_count": self._success_count,
+        }
+
+        if self._last_failure_time is not None and self._state == CircuitBreakerState.OPEN:
+            elapsed = time.monotonic() - self._last_failure_time
+            status["cooldown_remaining"] = max(0, self.cooldown_seconds - elapsed)
+
+        return status
 
 
 def retry_with_backoff(

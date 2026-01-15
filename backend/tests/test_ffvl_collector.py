@@ -12,7 +12,7 @@ import pytest
 
 # Import will fail until implementation exists - expected in TDD
 try:
-    from backend.collectors.ffvl import FFVLCollector
+    from collectors.ffvl import FFVLCollector
 except ImportError:
     FFVLCollector = None  # Will be implemented
 
@@ -576,7 +576,7 @@ class TestHttpErrorHandling:
         with patch.object(
             collector, "_fetch_beacon_html", new_callable=AsyncMock
         ) as mock_fetch:
-            from backend.collectors.utils import HttpClientError
+            from collectors.utils import HttpClientError
 
             mock_fetch.side_effect = HttpClientError("404 Not Found")
 
@@ -594,7 +594,7 @@ class TestHttpErrorHandling:
         with patch.object(
             collector, "_fetch_beacon_html", new_callable=AsyncMock
         ) as mock_fetch:
-            from backend.collectors.utils import HttpClientError
+            from collectors.utils import HttpClientError
 
             mock_fetch.side_effect = HttpClientError("500 Server Error")
 
@@ -628,7 +628,7 @@ class TestHttpErrorHandling:
         with patch.object(
             collector, "_fetch_beacon_html", new_callable=AsyncMock
         ) as mock_fetch:
-            from backend.collectors.utils import RetryExhaustedError
+            from collectors.utils import RetryExhaustedError
 
             mock_fetch.side_effect = RetryExhaustedError("All retries failed")
 

@@ -26,9 +26,9 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from backend.collectors.arome import AROMECollector
-from backend.collectors.utils import HttpClientError, RetryExhaustedError
-from backend.core.data_models import ForecastData
+from collectors.arome import AROMECollector
+from collectors.utils import HttpClientError, RetryExhaustedError
+from core.data_models import ForecastData
 
 
 # =============================================================================
@@ -183,7 +183,7 @@ class TestAROMECollectorStructure:
 
     def test_inherits_from_base_collector(self, collector):
         """Verify AROMECollector inherits from BaseCollector."""
-        from backend.collectors.base import BaseCollector
+        from collectors.base import BaseCollector
 
         assert isinstance(collector, BaseCollector)
 

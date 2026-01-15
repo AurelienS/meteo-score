@@ -50,14 +50,14 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Automated Weather Data Collection Pipeline
-  epic-2: in-progress
+  epic-2: done
   2-1-implement-basecollector-interface-and-core-data-models: done
   2-2-implement-meteo-parapente-forecast-collector-with-tdd: done
   2-3-implement-arome-forecast-collector-grib2-parsing: done
   2-4-implement-romma-observation-collector-beacon-scraping: done
   2-5-implement-ffvl-observation-collector-beacon-scraping: done
   2-6-setup-apscheduler-for-automated-collection: done
-  2-7-implement-error-handling-retry-logic-and-data-validation: backlog
+  2-7-implement-error-handling-retry-logic-and-data-validation: done
   epic-2-retrospective: optional
 
   # Epic 3: Forecast Accuracy Analysis Engine
