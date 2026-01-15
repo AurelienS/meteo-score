@@ -110,6 +110,10 @@ async def test_db(
 
             # Clean up all data after test (order matters due to FKs)
             try:
+                # Clean new tables first (they reference forecasts/observations)
+                await session.execute(text("DELETE FROM forecast_observation_pairs"))
+                await session.execute(text("DELETE FROM forecasts"))
+                await session.execute(text("DELETE FROM observations"))
                 await session.execute(text("DELETE FROM deviations"))
                 await session.execute(text("DELETE FROM sites"))
                 await session.execute(text("DELETE FROM models"))
@@ -141,7 +145,10 @@ async def test_db_committed(
         yield session
         await session.commit()
 
-        # Clean up all data after test
+        # Clean up all data after test (order matters due to FKs)
+        await session.execute(text("DELETE FROM forecast_observation_pairs"))
+        await session.execute(text("DELETE FROM forecasts"))
+        await session.execute(text("DELETE FROM observations"))
         await session.execute(text("DELETE FROM deviations"))
         await session.execute(text("DELETE FROM sites"))
         await session.execute(text("DELETE FROM models"))
