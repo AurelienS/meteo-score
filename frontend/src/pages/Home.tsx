@@ -1,10 +1,11 @@
 import type { Component } from 'solid-js';
-import { createSignal, createEffect, onMount, Show } from 'solid-js';
+import { createSignal, createEffect, onMount, Show, For } from 'solid-js';
 
 import SiteSelector from '../components/SiteSelector';
 import ParameterSelector from '../components/ParameterSelector';
 import HorizonSelector from '../components/HorizonSelector';
 import ModelComparisonTable from '../components/ModelComparisonTable';
+import BiasCharacterizationCard from '../components/BiasCharacterizationCard';
 import { fetchSites, fetchParameters, fetchSiteAccuracy } from '../lib/api';
 import type { Site, Parameter, SiteAccuracyResponse } from '../lib/types';
 
@@ -169,15 +170,40 @@ const Home: Component = () => {
           </div>
         </Show>
 
-        {/* Model comparison table */}
+        {/* Model comparison table and bias cards */}
         <Show when={!isLoadingAccuracy() && !accuracyError() && accuracyData()}>
           {(data) => (
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-              <ModelComparisonTable
-                models={data().models}
-                parameterUnit={selectedParameterUnit()}
-              />
-            </div>
+            <>
+              {/* Model comparison table */}
+              <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <ModelComparisonTable
+                  models={data().models}
+                  parameterUnit={selectedParameterUnit()}
+                />
+              </div>
+
+              {/* Bias characterization cards */}
+              <Show when={data().models.length > 0}>
+                <div class="mb-6">
+                  <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                    Bias Characterization
+                  </h2>
+                  <div class="space-y-4">
+                    <For each={data().models}>
+                      {(model) => (
+                        <BiasCharacterizationCard
+                          modelName={model.modelName}
+                          bias={model.bias}
+                          parameterName={data().parameterName}
+                          parameterUnit={selectedParameterUnit()}
+                          confidenceLevel={model.confidenceLevel}
+                        />
+                      )}
+                    </For>
+                  </div>
+                </div>
+              </Show>
+            </>
           )}
         </Show>
       </Show>
