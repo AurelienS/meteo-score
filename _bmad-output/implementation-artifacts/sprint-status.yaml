@@ -74,7 +74,7 @@ development_status:
   epic-4: in-progress
   4-1-solid-js-frontend-project-setup: done
   4-2-site-selection-and-parameter-controls: done
-  4-3-model-comparison-table-component: backlog
+  4-3-model-comparison-table-component: done
   4-4-bias-characterization-card: backlog
   4-5-accuracy-time-series-chart-d3-js: backlog
   4-6-data-freshness-and-sample-size-indicators: backlog

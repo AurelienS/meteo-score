@@ -1,11 +1,12 @@
 import type { Component } from 'solid-js';
-import { createSignal, onMount, Show } from 'solid-js';
+import { createSignal, createEffect, onMount, Show } from 'solid-js';
 
 import SiteSelector from '../components/SiteSelector';
 import ParameterSelector from '../components/ParameterSelector';
 import HorizonSelector from '../components/HorizonSelector';
-import { fetchSites, fetchParameters } from '../lib/api';
-import type { Site, Parameter } from '../lib/types';
+import ModelComparisonTable from '../components/ModelComparisonTable';
+import { fetchSites, fetchParameters, fetchSiteAccuracy } from '../lib/api';
+import type { Site, Parameter, SiteAccuracyResponse } from '../lib/types';
 
 /** Standard forecast horizons for MVP */
 const FORECAST_HORIZONS = [6, 12, 24, 48];
@@ -18,6 +19,7 @@ const Home: Component = () => {
   // Data state - loaded from API
   const [sites, setSites] = createSignal<Site[]>([]);
   const [parameters, setParameters] = createSignal<Parameter[]>([]);
+  const [accuracyData, setAccuracyData] = createSignal<SiteAccuracyResponse | null>(null);
 
   // Selection state
   const [selectedSiteId, setSelectedSiteId] = createSignal<number>(0);
@@ -27,11 +29,48 @@ const Home: Component = () => {
   // Loading states - specific per resource
   const [isLoadingSites, setIsLoadingSites] = createSignal(true);
   const [isLoadingParameters, setIsLoadingParameters] = createSignal(true);
+  const [isLoadingAccuracy, setIsLoadingAccuracy] = createSignal(false);
 
   // Error state
   const [error, setError] = createSignal<string | null>(null);
+  const [accuracyError, setAccuracyError] = createSignal<string | null>(null);
 
-  // Load data on mount
+  // Get selected parameter unit for display
+  const selectedParameterUnit = () => {
+    const param = parameters().find(p => p.id === selectedParameterId());
+    return param?.unit || '';
+  };
+
+  // Fetch accuracy data when selections change
+  const loadAccuracyData = async (siteId: number, parameterId: number, horizon: number) => {
+    if (!siteId || !parameterId) return;
+
+    setIsLoadingAccuracy(true);
+    setAccuracyError(null);
+
+    try {
+      const data = await fetchSiteAccuracy(siteId, parameterId, horizon);
+      setAccuracyData(data);
+    } catch (err) {
+      setAccuracyError(err instanceof Error ? err.message : 'Failed to load accuracy data');
+      setAccuracyData(null);
+    } finally {
+      setIsLoadingAccuracy(false);
+    }
+  };
+
+  // Effect to refetch accuracy data when selections change
+  createEffect(() => {
+    const siteId = selectedSiteId();
+    const parameterId = selectedParameterId();
+    const horizon = selectedHorizon();
+
+    if (siteId && parameterId) {
+      loadAccuracyData(siteId, parameterId, horizon);
+    }
+  });
+
+  // Load initial data on mount
   onMount(async () => {
     try {
       // Fetch sites and parameters in parallel
@@ -58,7 +97,7 @@ const Home: Component = () => {
     }
   });
 
-  const isLoading = () => isLoadingSites() || isLoadingParameters();
+  const isLoadingSelectors = () => isLoadingSites() || isLoadingParameters();
 
   return (
     <div class="container mx-auto px-4 py-8">
@@ -69,7 +108,7 @@ const Home: Component = () => {
         Compare weather forecast accuracy across different models for paragliding sites.
       </p>
 
-      {/* Error state */}
+      {/* Error state for initial load */}
       <Show when={error()}>
         <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
           <p class="font-medium">Error loading data</p>
@@ -77,8 +116,8 @@ const Home: Component = () => {
         </div>
       </Show>
 
-      {/* Loading state */}
-      <Show when={isLoading()}>
+      {/* Loading state for selectors */}
+      <Show when={isLoadingSelectors()}>
         <div class="bg-white rounded-lg shadow-md p-6">
           <div class="animate-pulse space-y-4">
             <div class="h-4 bg-gray-200 rounded w-1/4" />
@@ -89,8 +128,9 @@ const Home: Component = () => {
         </div>
       </Show>
 
-      {/* Selectors - responsive grid */}
-      <Show when={!isLoading() && !error()}>
+      {/* Main content when selectors are loaded */}
+      <Show when={!isLoadingSelectors() && !error()}>
+        {/* Selectors - responsive grid */}
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <SiteSelector
@@ -111,19 +151,35 @@ const Home: Component = () => {
           </div>
         </div>
 
-        {/* Current selection summary */}
-        <div class="bg-gray-50 rounded-lg p-4">
-          <h2 class="text-sm font-medium text-gray-500 mb-2">Current Selection</h2>
-          <p class="text-gray-700">
-            <span class="font-medium">Site:</span>{' '}
-            {sites().find(s => s.id === selectedSiteId())?.name || 'None'}
-            {' | '}
-            <span class="font-medium">Parameter:</span>{' '}
-            {parameters().find(p => p.id === selectedParameterId())?.name || 'None'}
-            {' | '}
-            <span class="font-medium">Horizon:</span> +{selectedHorizon()}h
-          </p>
-        </div>
+        {/* Accuracy error state */}
+        <Show when={accuracyError()}>
+          <div class="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-lg mb-6">
+            <p class="font-medium">Could not load accuracy data</p>
+            <p class="text-sm">{accuracyError()}</p>
+          </div>
+        </Show>
+
+        {/* Loading state for accuracy data */}
+        <Show when={isLoadingAccuracy()}>
+          <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="animate-pulse space-y-4">
+              <div class="h-6 bg-gray-200 rounded w-1/3" />
+              <div class="h-40 bg-gray-200 rounded" />
+            </div>
+          </div>
+        </Show>
+
+        {/* Model comparison table */}
+        <Show when={!isLoadingAccuracy() && !accuracyError() && accuracyData()}>
+          {(data) => (
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+              <ModelComparisonTable
+                models={data().models}
+                parameterUnit={selectedParameterUnit()}
+              />
+            </div>
+          )}
+        </Show>
       </Show>
     </div>
   );

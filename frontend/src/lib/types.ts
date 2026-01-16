@@ -65,3 +65,28 @@ export interface HealthResponse {
   status: string;
   database?: string;
 }
+
+/** Confidence level for accuracy metrics */
+export type ConfidenceLevel = 'insufficient' | 'preliminary' | 'validated';
+
+/** Accuracy metrics for a single forecast model */
+export interface ModelAccuracyMetrics {
+  modelId: number;
+  modelName: string;
+  mae: number;
+  bias: number;
+  stdDev: number;
+  sampleSize: number;
+  confidenceLevel: ConfidenceLevel;
+  confidenceMessage: string;
+}
+
+/** Response for site accuracy comparison across models */
+export interface SiteAccuracyResponse {
+  siteId: number;
+  siteName: string;
+  parameterId: number;
+  parameterName: string;
+  horizon: number;
+  models: ModelAccuracyMetrics[];
+}

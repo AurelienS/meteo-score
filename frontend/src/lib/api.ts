@@ -3,7 +3,7 @@
  * Provides typed fetch wrapper with error handling.
  */
 
-import type { ApiError, HealthResponse, Site, Parameter, PaginatedResponse } from './types';
+import type { ApiError, HealthResponse, Site, Parameter, PaginatedResponse, SiteAccuracyResponse } from './types';
 
 /** Base API URL from environment or default to local backend */
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -76,4 +76,32 @@ export async function fetchSites(): Promise<Site[]> {
 export async function fetchParameters(): Promise<Parameter[]> {
   const response = await fetchApi<PaginatedResponse<Parameter>>('/api/v1/parameters/');
   return response.data;
+}
+
+/**
+ * Fetch site accuracy comparison across all models.
+ * @param siteId - Site identifier (must be positive integer)
+ * @param parameterId - Weather parameter identifier (must be positive integer)
+ * @param horizon - Forecast horizon in hours (must be positive integer)
+ * @returns Promise resolving to accuracy response with model metrics
+ * @throws ApiRequestError if parameters are invalid
+ */
+export async function fetchSiteAccuracy(
+  siteId: number,
+  parameterId: number,
+  horizon: number
+): Promise<SiteAccuracyResponse> {
+  if (!Number.isInteger(siteId) || siteId <= 0) {
+    throw new ApiRequestError('Invalid siteId: must be a positive integer', 400, 'ValidationError');
+  }
+  if (!Number.isInteger(parameterId) || parameterId <= 0) {
+    throw new ApiRequestError('Invalid parameterId: must be a positive integer', 400, 'ValidationError');
+  }
+  if (!Number.isInteger(horizon) || horizon <= 0) {
+    throw new ApiRequestError('Invalid horizon: must be a positive integer', 400, 'ValidationError');
+  }
+
+  return fetchApi<SiteAccuracyResponse>(
+    `/api/v1/analysis/sites/${siteId}/accuracy?parameterId=${parameterId}&horizon=${horizon}`
+  );
 }
