@@ -6,8 +6,10 @@ import ParameterSelector from '../components/ParameterSelector';
 import HorizonSelector from '../components/HorizonSelector';
 import ModelComparisonTable from '../components/ModelComparisonTable';
 import BiasCharacterizationCard from '../components/BiasCharacterizationCard';
-import { fetchSites, fetchParameters, fetchSiteAccuracy } from '../lib/api';
-import type { Site, Parameter, SiteAccuracyResponse } from '../lib/types';
+import AccuracyTimeSeriesChart, { getModelColor } from '../components/AccuracyTimeSeriesChart';
+import type { ModelTimeSeries } from '../components/AccuracyTimeSeriesChart';
+import { fetchSites, fetchParameters, fetchSiteAccuracy, fetchAccuracyTimeSeries } from '../lib/api';
+import type { Site, Parameter, SiteAccuracyResponse, ModelAccuracyMetrics } from '../lib/types';
 
 /** Standard forecast horizons for MVP */
 const FORECAST_HORIZONS = [6, 12, 24, 48];
@@ -21,6 +23,7 @@ const Home: Component = () => {
   const [sites, setSites] = createSignal<Site[]>([]);
   const [parameters, setParameters] = createSignal<Parameter[]>([]);
   const [accuracyData, setAccuracyData] = createSignal<SiteAccuracyResponse | null>(null);
+  const [timeSeriesData, setTimeSeriesData] = createSignal<ModelTimeSeries[]>([]);
 
   // Selection state
   const [selectedSiteId, setSelectedSiteId] = createSignal<number>(0);
@@ -31,10 +34,12 @@ const Home: Component = () => {
   const [isLoadingSites, setIsLoadingSites] = createSignal(true);
   const [isLoadingParameters, setIsLoadingParameters] = createSignal(true);
   const [isLoadingAccuracy, setIsLoadingAccuracy] = createSignal(false);
+  const [isLoadingTimeSeries, setIsLoadingTimeSeries] = createSignal(false);
 
   // Error state
   const [error, setError] = createSignal<string | null>(null);
   const [accuracyError, setAccuracyError] = createSignal<string | null>(null);
+  const [timeSeriesError, setTimeSeriesError] = createSignal<string | null>(null);
 
   // Get selected parameter unit for display
   const selectedParameterUnit = () => {
@@ -60,6 +65,48 @@ const Home: Component = () => {
     }
   };
 
+  // Fetch time series for all models
+  const loadTimeSeriesData = async (
+    siteId: number,
+    parameterId: number,
+    models: ModelAccuracyMetrics[]
+  ) => {
+    if (!siteId || !parameterId || models.length === 0) {
+      setTimeSeriesData([]);
+      return;
+    }
+
+    setIsLoadingTimeSeries(true);
+    setTimeSeriesError(null);
+
+    try {
+      // Fetch in parallel for all models
+      const responses = await Promise.all(
+        models.map(model =>
+          fetchAccuracyTimeSeries(siteId, model.modelId, parameterId)
+        )
+      );
+
+      // Transform to chart format
+      const chartData: ModelTimeSeries[] = responses.map((response, index) => ({
+        modelId: response.modelId,
+        modelName: response.modelName,
+        color: getModelColor(response.modelName, index),
+        data: response.dataPoints.map(dp => ({
+          date: new Date(dp.bucket),
+          mae: dp.mae,
+        })),
+      }));
+
+      setTimeSeriesData(chartData);
+    } catch (err) {
+      setTimeSeriesError(err instanceof Error ? err.message : 'Failed to load time series data');
+      setTimeSeriesData([]);
+    } finally {
+      setIsLoadingTimeSeries(false);
+    }
+  };
+
   // Effect to refetch accuracy data when selections change
   createEffect(() => {
     const siteId = selectedSiteId();
@@ -68,6 +115,16 @@ const Home: Component = () => {
 
     if (siteId && parameterId) {
       loadAccuracyData(siteId, parameterId, horizon);
+    }
+  });
+
+  // Effect to load time series after accuracy data loads
+  createEffect(() => {
+    const data = accuracyData();
+    if (data && data.models.length > 0) {
+      loadTimeSeriesData(data.siteId, data.parameterId, data.models);
+    } else {
+      setTimeSeriesData([]);
     }
   });
 
@@ -201,6 +258,34 @@ const Home: Component = () => {
                       )}
                     </For>
                   </div>
+                </div>
+              </Show>
+
+              {/* Time series error state */}
+              <Show when={timeSeriesError()}>
+                <div class="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-lg mb-6">
+                  <p class="font-medium">Could not load time series data</p>
+                  <p class="text-sm">{timeSeriesError()}</p>
+                </div>
+              </Show>
+
+              {/* Time series chart loading state */}
+              <Show when={isLoadingTimeSeries()}>
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                  <div class="animate-pulse space-y-4">
+                    <div class="h-6 bg-gray-200 rounded w-1/3" />
+                    <div class="h-80 bg-gray-200 rounded" />
+                  </div>
+                </div>
+              </Show>
+
+              {/* Accuracy time series chart */}
+              <Show when={!isLoadingTimeSeries() && !timeSeriesError()}>
+                <div class="mb-6">
+                  <AccuracyTimeSeriesChart
+                    models={timeSeriesData()}
+                    parameterUnit={selectedParameterUnit()}
+                  />
                 </div>
               </Show>
             </>

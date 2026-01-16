@@ -3,7 +3,7 @@
  * Provides typed fetch wrapper with error handling.
  */
 
-import type { ApiError, HealthResponse, Site, Parameter, PaginatedResponse, SiteAccuracyResponse } from './types';
+import type { ApiError, HealthResponse, Site, Parameter, PaginatedResponse, SiteAccuracyResponse, TimeSeriesAccuracyResponse } from './types';
 
 /** Base API URL from environment or default to local backend */
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -103,5 +103,46 @@ export async function fetchSiteAccuracy(
 
   return fetchApi<SiteAccuracyResponse>(
     `/api/v1/analysis/sites/${siteId}/accuracy?parameterId=${parameterId}&horizon=${horizon}`
+  );
+}
+
+/** Valid granularity values for time series API */
+const VALID_GRANULARITIES = ['daily', 'weekly', 'monthly'] as const;
+type Granularity = typeof VALID_GRANULARITIES[number];
+
+/**
+ * Fetch time series accuracy data for a model at a site.
+ * @param siteId - Site identifier (must be positive integer)
+ * @param modelId - Model identifier (must be positive integer)
+ * @param parameterId - Weather parameter identifier (must be positive integer)
+ * @param granularity - Time granularity: "daily" | "weekly" | "monthly" (default: "daily")
+ * @returns Promise resolving to time series accuracy data
+ * @throws ApiRequestError if parameters are invalid
+ */
+export async function fetchAccuracyTimeSeries(
+  siteId: number,
+  modelId: number,
+  parameterId: number,
+  granularity: Granularity = 'daily'
+): Promise<TimeSeriesAccuracyResponse> {
+  if (!Number.isInteger(siteId) || siteId <= 0) {
+    throw new ApiRequestError('Invalid siteId: must be a positive integer', 400, 'ValidationError');
+  }
+  if (!Number.isInteger(modelId) || modelId <= 0) {
+    throw new ApiRequestError('Invalid modelId: must be a positive integer', 400, 'ValidationError');
+  }
+  if (!Number.isInteger(parameterId) || parameterId <= 0) {
+    throw new ApiRequestError('Invalid parameterId: must be a positive integer', 400, 'ValidationError');
+  }
+  if (!VALID_GRANULARITIES.includes(granularity)) {
+    throw new ApiRequestError(
+      `Invalid granularity: must be one of ${VALID_GRANULARITIES.join(', ')}`,
+      400,
+      'ValidationError'
+    );
+  }
+
+  return fetchApi<TimeSeriesAccuracyResponse>(
+    `/api/v1/analysis/sites/${siteId}/accuracy/timeseries?modelId=${modelId}&parameterId=${parameterId}&granularity=${granularity}`
   );
 }

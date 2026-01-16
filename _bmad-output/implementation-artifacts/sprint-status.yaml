@@ -76,7 +76,7 @@ development_status:
   4-2-site-selection-and-parameter-controls: done
   4-3-model-comparison-table-component: done
   4-4-bias-characterization-card: done
-  4-5-accuracy-time-series-chart-d3-js: ready-for-dev
+  4-5-accuracy-time-series-chart-d3-js: done
   4-6-data-freshness-and-sample-size-indicators: backlog
   4-7-responsive-layout-and-mobile-optimization: backlog
   4-8-api-integration-with-error-handling: backlog

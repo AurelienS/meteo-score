@@ -90,3 +90,23 @@ export interface SiteAccuracyResponse {
   horizon: number;
   models: ModelAccuracyMetrics[];
 }
+
+/** Single data point in time series accuracy data */
+export interface TimeSeriesDataPoint {
+  bucket: string;
+  mae: number;
+  bias: number;
+  sampleSize: number;
+}
+
+/** Response for time series accuracy data */
+export interface TimeSeriesAccuracyResponse {
+  siteId: number;
+  siteName: string;
+  modelId: number;
+  modelName: string;
+  parameterId: number;
+  parameterName: string;
+  granularity: string;
+  dataPoints: TimeSeriesDataPoint[];
+}
