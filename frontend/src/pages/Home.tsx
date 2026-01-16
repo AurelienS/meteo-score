@@ -1,18 +1,22 @@
 import type { Component } from 'solid-js';
-import { createSignal, createEffect, onMount, Show, For } from 'solid-js';
+import { createSignal, createEffect, createMemo, onMount, Show, For } from 'solid-js';
 
 import SiteSelector from '../components/SiteSelector';
 import ParameterSelector from '../components/ParameterSelector';
 import HorizonSelector from '../components/HorizonSelector';
 import ModelComparisonTable from '../components/ModelComparisonTable';
+import DataFreshnessIndicator from '../components/DataFreshnessIndicator';
 import BiasCharacterizationCard from '../components/BiasCharacterizationCard';
 import AccuracyTimeSeriesChart, { getModelColor } from '../components/AccuracyTimeSeriesChart';
 import type { ModelTimeSeries } from '../components/AccuracyTimeSeriesChart';
 import { fetchSites, fetchParameters, fetchSiteAccuracy, fetchAccuracyTimeSeries } from '../lib/api';
-import type { Site, Parameter, SiteAccuracyResponse, ModelAccuracyMetrics } from '../lib/types';
+import type { Site, Parameter, SiteAccuracyResponse, ModelAccuracyMetrics, ConfidenceLevel } from '../lib/types';
 
 /** Standard forecast horizons for MVP */
 const FORECAST_HORIZONS = [6, 12, 24, 48];
+
+/** Confidence levels ordered from lowest to highest for conservative comparison */
+const CONFIDENCE_LEVELS_ORDERED: ConfidenceLevel[] = ['insufficient', 'preliminary', 'validated'];
 
 /**
  * Home page component.
@@ -157,6 +161,41 @@ const Home: Component = () => {
 
   const isLoadingSelectors = () => isLoadingSites() || isLoadingParameters();
 
+  // Derive freshness data from time series and accuracy data
+  const freshnessData = createMemo(() => {
+    const tsData = timeSeriesData();
+    const accData = accuracyData();
+
+    if (!accData || tsData.length === 0) return null;
+
+    // Get all bucket dates from all models
+    const allBuckets = tsData.flatMap(m => m.data.map(d => d.date));
+    if (allBuckets.length === 0) return null;
+
+    // Sort to find min/max dates (spread to avoid mutating original array)
+    const sortedBuckets = [...allBuckets].sort((a, b) => a.getTime() - b.getTime());
+
+    // Aggregate sample size (sum across models)
+    const totalSampleSize = accData.models.reduce((sum, m) => sum + m.sampleSize, 0);
+
+    // Use lowest confidence level (most conservative)
+    const lowestConfidence = accData.models.reduce((lowest, m) => {
+      const currentIdx = CONFIDENCE_LEVELS_ORDERED.indexOf(m.confidenceLevel);
+      const lowestIdx = CONFIDENCE_LEVELS_ORDERED.indexOf(lowest);
+      return currentIdx < lowestIdx ? m.confidenceLevel : lowest;
+    }, 'validated' as ConfidenceLevel);
+
+    return {
+      lastUpdate: sortedBuckets[sortedBuckets.length - 1],
+      sampleSize: totalSampleSize,
+      dateRange: {
+        start: sortedBuckets[0],
+        end: sortedBuckets[sortedBuckets.length - 1],
+      },
+      confidenceLevel: lowestConfidence,
+    };
+  });
+
   return (
     <div class="container mx-auto px-4 py-8">
       <h1 class="text-3xl font-bold text-gray-900 mb-2">
@@ -238,6 +277,20 @@ const Home: Component = () => {
                   parameterUnit={selectedParameterUnit()}
                 />
               </div>
+
+              {/* Data freshness indicator - only show when time series has loaded */}
+              <Show when={!isLoadingTimeSeries() && freshnessData()}>
+                {(freshness) => (
+                  <div class="mb-6">
+                    <DataFreshnessIndicator
+                      lastUpdate={freshness().lastUpdate}
+                      sampleSize={freshness().sampleSize}
+                      dateRange={freshness().dateRange}
+                      confidenceLevel={freshness().confidenceLevel}
+                    />
+                  </div>
+                )}
+              </Show>
 
               {/* Bias characterization cards */}
               <Show when={data().models.length > 0}>
