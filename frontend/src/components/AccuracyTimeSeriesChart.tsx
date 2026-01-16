@@ -27,10 +27,32 @@ export interface AccuracyTimeSeriesChartProps {
 
 /** Chart configuration */
 const CHART_CONFIG = {
-  margin: { top: 20, right: 120, bottom: 40, left: 60 },
+  marginDesktop: { top: 20, right: 120, bottom: 40, left: 60 },
+  marginMobile: { top: 20, right: 90, bottom: 40, left: 45 },
   height: 400,
+  mobileBreakpoint: 640,
   hoverLineColor: '#9ca3af',
+  legendMaxChars: 12,
 };
+
+/**
+ * Get responsive margins based on container width.
+ */
+function getResponsiveMargins(containerWidth: number) {
+  return containerWidth < CHART_CONFIG.mobileBreakpoint
+    ? CHART_CONFIG.marginMobile
+    : CHART_CONFIG.marginDesktop;
+}
+
+/**
+ * Truncate text to fit legend on mobile screens.
+ */
+function truncateForLegend(text: string, isMobile: boolean): string {
+  if (!isMobile || text.length <= CHART_CONFIG.legendMaxChars) {
+    return text;
+  }
+  return text.slice(0, CHART_CONFIG.legendMaxChars - 1) + '…';
+}
 
 /**
  * Escape HTML entities to prevent XSS attacks.
@@ -70,8 +92,10 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
     // Clear previous chart
     d3.select(svgRef).selectAll('*').remove();
 
-    const { margin } = CHART_CONFIG;
-    const width = svgRef.clientWidth - margin.left - margin.right;
+    const containerWidth = svgRef.clientWidth;
+    const isMobile = containerWidth < CHART_CONFIG.mobileBreakpoint;
+    const margin = getResponsiveMargins(containerWidth);
+    const width = containerWidth - margin.left - margin.right;
     const height = CHART_CONFIG.height - margin.top - margin.bottom;
 
     if (width <= 0 || height <= 0) return;
@@ -171,7 +195,7 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
         .attr('x', 25)
         .attr('y', legendY + 14)
         .attr('class', 'text-xs fill-gray-700')
-        .text(model.modelName);
+        .text(truncateForLegend(model.modelName, isMobile));
     });
 
     // Interactive overlay for tooltip
@@ -276,7 +300,7 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
 
   return (
     <div class="bg-white rounded-lg shadow-sm">
-      <h3 class="text-lg font-semibold text-gray-900 p-6 pb-2">
+      <h3 class="text-base md:text-lg font-semibold text-gray-900 p-4 md:p-6 pb-2">
         Accuracy Evolution Over Time
       </h3>
 
@@ -291,7 +315,7 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
 
       {/* Chart */}
       <Show when={props.models.length > 0}>
-        <div class="px-6 pb-6">
+        <div class="px-4 md:px-6 pb-4 md:pb-6">
           <svg
             ref={svgRef!}
             class="w-full"

@@ -30,7 +30,7 @@ const SiteSelector: Component<SiteSelectorProps> = (props) => {
       </label>
       <select
         id={selectId}
-        class="block w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+        class="block w-full px-4 py-2 min-h-[44px] border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
         value={props.selectedSiteId}
         onChange={(e) => props.onSiteChange(Number(e.currentTarget.value))}
         disabled={props.sites.length === 0}

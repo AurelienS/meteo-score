@@ -198,10 +198,10 @@ const Home: Component = () => {
 
   return (
     <div class="container mx-auto px-4 py-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
         MétéoScore
       </h1>
-      <p class="text-gray-600 mb-8">
+      <p class="text-sm md:text-base text-gray-600 mb-8">
         Compare weather forecast accuracy across different models for paragliding sites.
       </p>
 
@@ -295,7 +295,7 @@ const Home: Component = () => {
               {/* Bias characterization cards */}
               <Show when={data().models.length > 0}>
                 <div class="mb-6">
-                  <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                  <h2 class="text-base md:text-lg font-semibold text-gray-900 mb-4">
                     Bias Characterization
                   </h2>
                   <div class="space-y-4">

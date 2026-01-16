@@ -56,7 +56,7 @@ const ParameterSelector: Component<ParameterSelectorProps> = (props) => {
         </Show>
         <For each={props.parameters}>
           {(param) => (
-            <label class="flex items-center cursor-pointer">
+            <label class="flex items-center cursor-pointer min-h-[44px] px-2 -mx-2 rounded hover:bg-gray-50">
               <input
                 type="radio"
                 name="parameter"

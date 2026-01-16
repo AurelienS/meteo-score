@@ -3,6 +3,7 @@ import { ErrorBoundary } from 'solid-js';
 import { Route, Router, A } from '@solidjs/router';
 
 import Navigation from './components/Navigation';
+import Footer from './components/Footer';
 import Home from './pages/Home';
 import SiteDetail from './pages/SiteDetail';
 import About from './pages/About';
@@ -32,9 +33,10 @@ function ErrorFallback(props: { error: Error; reset: () => void }): JSX.Element 
  */
 function Layout(props: { children?: JSX.Element }): JSX.Element {
   return (
-    <div class="min-h-screen bg-gray-50">
+    <div class="min-h-screen bg-gray-50 flex flex-col">
       <Navigation />
-      <main>{props.children}</main>
+      <main class="flex-grow">{props.children}</main>
+      <Footer />
     </div>
   );
 }

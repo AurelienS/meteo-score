@@ -78,7 +78,7 @@ development_status:
   4-4-bias-characterization-card: done
   4-5-accuracy-time-series-chart-d3-js: done
   4-6-data-freshness-and-sample-size-indicators: done
-  4-7-responsive-layout-and-mobile-optimization: ready-for-dev
+  4-7-responsive-layout-and-mobile-optimization: done
   4-8-api-integration-with-error-handling: backlog
   4-9-methodology-and-transparency-page: backlog
   4-10-production-build-and-docker-integration: backlog

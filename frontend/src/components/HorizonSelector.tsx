@@ -37,7 +37,7 @@ const HorizonSelector: Component<HorizonSelectorProps> = (props) => {
               type="button"
               id={`${groupId}-${horizon}`}
               aria-pressed={props.selectedHorizon === horizon}
-              class={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              class={`px-4 py-2 min-h-[44px] min-w-[44px] rounded-lg font-medium transition-colors ${
                 props.selectedHorizon === horizon
                   ? 'bg-primary-500 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'

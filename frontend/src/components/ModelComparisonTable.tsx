@@ -64,7 +64,7 @@ const ModelComparisonTable: Component<ModelComparisonTableProps> = (props) => {
     <div class="w-full">
       <h2
         id={`${tableId}-label`}
-        class="text-lg font-semibold text-gray-900 mb-4"
+        class="text-base md:text-lg font-semibold text-gray-900 mb-4"
       >
         Model Comparison
       </h2>
@@ -108,7 +108,7 @@ const ModelComparisonTable: Component<ModelComparisonTableProps> = (props) => {
                 </th>
                 <th
                   scope="col"
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  class="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
                   Sample Size
                 </th>
@@ -145,7 +145,7 @@ const ModelComparisonTable: Component<ModelComparisonTableProps> = (props) => {
                       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {getBiasText(model.bias, props.parameterUnit)}
                       </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {model.sampleSize.toLocaleString()} measurements
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap">
