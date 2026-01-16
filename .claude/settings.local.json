@@ -57,7 +57,8 @@
       "Bash(pip3:*)",
       "Bash(docker info:*)",
       "Bash(docker compose:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(timeout 8 npm run dev:*)"
     ],
     "deny": [],
     "ask": []

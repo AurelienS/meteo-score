@@ -3,7 +3,7 @@
  * Provides typed fetch wrapper with error handling.
  */
 
-import type { ApiError, HealthResponse } from './types';
+import type { ApiError, HealthResponse, Site, Parameter, PaginatedResponse } from './types';
 
 /** Base API URL from environment or default to local backend */
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -58,4 +58,22 @@ export async function fetchApi<T>(endpoint: string): Promise<T> {
  */
 export async function checkHealth(): Promise<HealthResponse> {
   return fetchApi<HealthResponse>('/api/health');
+}
+
+/**
+ * Fetch all available sites.
+ * @returns Promise resolving to array of sites
+ */
+export async function fetchSites(): Promise<Site[]> {
+  const response = await fetchApi<PaginatedResponse<Site>>('/api/v1/sites/');
+  return response.data;
+}
+
+/**
+ * Fetch all available weather parameters.
+ * @returns Promise resolving to array of parameters
+ */
+export async function fetchParameters(): Promise<Parameter[]> {
+  const response = await fetchApi<PaginatedResponse<Parameter>>('/api/v1/parameters/');
+  return response.data;
 }
