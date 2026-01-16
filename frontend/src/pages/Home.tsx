@@ -9,7 +9,7 @@ import DataFreshnessIndicator from '../components/DataFreshnessIndicator';
 import BiasCharacterizationCard from '../components/BiasCharacterizationCard';
 import AccuracyTimeSeriesChart, { getModelColor } from '../components/AccuracyTimeSeriesChart';
 import type { ModelTimeSeries } from '../components/AccuracyTimeSeriesChart';
-import { fetchSites, fetchParameters, fetchSiteAccuracy, fetchAccuracyTimeSeries } from '../lib/api';
+import { fetchSites, fetchParameters, fetchSiteAccuracy, fetchAccuracyTimeSeries, NetworkError, TimeoutError } from '../lib/api';
 import type { Site, Parameter, SiteAccuracyResponse, ModelAccuracyMetrics, ConfidenceLevel } from '../lib/types';
 
 /** Standard forecast horizons for MVP */
@@ -17,6 +17,22 @@ const FORECAST_HORIZONS = [6, 12, 24, 48];
 
 /** Confidence levels ordered from lowest to highest for conservative comparison */
 const CONFIDENCE_LEVELS_ORDERED: ConfidenceLevel[] = ['insufficient', 'preliminary', 'validated'];
+
+/**
+ * Get user-friendly error message based on error type.
+ */
+function getErrorMessage(err: unknown): string {
+  if (err instanceof TimeoutError) {
+    return 'Request timed out. The server may be busy - please try again later.';
+  }
+  if (err instanceof NetworkError) {
+    return 'Unable to connect. Please check your internet connection.';
+  }
+  if (err instanceof Error) {
+    return err.message;
+  }
+  return 'An unexpected error occurred.';
+}
 
 /**
  * Home page component.
@@ -62,7 +78,7 @@ const Home: Component = () => {
       const data = await fetchSiteAccuracy(siteId, parameterId, horizon);
       setAccuracyData(data);
     } catch (err) {
-      setAccuracyError(err instanceof Error ? err.message : 'Failed to load accuracy data');
+      setAccuracyError(getErrorMessage(err));
       setAccuracyData(null);
     } finally {
       setIsLoadingAccuracy(false);
@@ -104,7 +120,7 @@ const Home: Component = () => {
 
       setTimeSeriesData(chartData);
     } catch (err) {
-      setTimeSeriesError(err instanceof Error ? err.message : 'Failed to load time series data');
+      setTimeSeriesError(getErrorMessage(err));
       setTimeSeriesData([]);
     } finally {
       setIsLoadingTimeSeries(false);
@@ -132,10 +148,13 @@ const Home: Component = () => {
     }
   });
 
-  // Load initial data on mount
-  onMount(async () => {
+  // Shared function for loading initial data (sites and parameters)
+  const loadInitialData = async () => {
+    setError(null);
+    setIsLoadingSites(true);
+    setIsLoadingParameters(true);
+
     try {
-      // Fetch sites and parameters in parallel
       const [sitesData, parametersData] = await Promise.all([
         fetchSites(),
         fetchParameters(),
@@ -152,14 +171,32 @@ const Home: Component = () => {
         setSelectedParameterId(parametersData[0].id);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load data');
+      setError(getErrorMessage(err));
     } finally {
       setIsLoadingSites(false);
       setIsLoadingParameters(false);
     }
+  };
+
+  // Load initial data on mount
+  onMount(() => {
+    loadInitialData();
   });
 
   const isLoadingSelectors = () => isLoadingSites() || isLoadingParameters();
+
+  // Retry handler for accuracy data
+  const retryAccuracyLoad = () => {
+    loadAccuracyData(selectedSiteId(), selectedParameterId(), selectedHorizon());
+  };
+
+  // Retry handler for time series data
+  const retryTimeSeriesLoad = () => {
+    const data = accuracyData();
+    if (data && data.models.length > 0) {
+      loadTimeSeriesData(data.siteId, data.parameterId, data.models);
+    }
+  };
 
   // Derive freshness data from time series and accuracy data
   const freshnessData = createMemo(() => {
@@ -207,9 +244,17 @@ const Home: Component = () => {
 
       {/* Error state for initial load */}
       <Show when={error()}>
-        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+        <div role="alert" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
           <p class="font-medium">Error loading data</p>
-          <p class="text-sm">{error()}</p>
+          <p class="text-sm mb-3">{error()}</p>
+          <button
+            type="button"
+            class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={loadInitialData}
+            disabled={isLoadingSelectors()}
+          >
+            {isLoadingSelectors() ? 'Retrying...' : 'Retry'}
+          </button>
         </div>
       </Show>
 
@@ -250,9 +295,17 @@ const Home: Component = () => {
 
         {/* Accuracy error state */}
         <Show when={accuracyError()}>
-          <div class="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-lg mb-6">
+          <div role="alert" class="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-lg mb-6">
             <p class="font-medium">Could not load accuracy data</p>
-            <p class="text-sm">{accuracyError()}</p>
+            <p class="text-sm mb-3">{accuracyError()}</p>
+            <button
+              type="button"
+              class="px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={retryAccuracyLoad}
+              disabled={isLoadingAccuracy()}
+            >
+              {isLoadingAccuracy() ? 'Retrying...' : 'Retry'}
+            </button>
           </div>
         </Show>
 
@@ -316,9 +369,17 @@ const Home: Component = () => {
 
               {/* Time series error state */}
               <Show when={timeSeriesError()}>
-                <div class="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-lg mb-6">
+                <div role="alert" class="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-lg mb-6">
                   <p class="font-medium">Could not load time series data</p>
-                  <p class="text-sm">{timeSeriesError()}</p>
+                  <p class="text-sm mb-3">{timeSeriesError()}</p>
+                  <button
+                    type="button"
+                    class="px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={retryTimeSeriesLoad}
+                    disabled={isLoadingTimeSeries()}
+                  >
+                    {isLoadingTimeSeries() ? 'Retrying...' : 'Retry'}
+                  </button>
                 </div>
               </Show>
 

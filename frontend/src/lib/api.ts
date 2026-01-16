@@ -1,6 +1,6 @@
 /**
  * API client for MétéoScore backend.
- * Provides typed fetch wrapper with error handling.
+ * Provides typed fetch wrapper with error handling, timeout, and network error detection.
  */
 
 import type { ApiError, HealthResponse, Site, Parameter, PaginatedResponse, SiteAccuracyResponse, TimeSeriesAccuracyResponse } from './types';
@@ -8,8 +8,11 @@ import type { ApiError, HealthResponse, Site, Parameter, PaginatedResponse, Site
 /** Base API URL from environment or default to local backend */
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
+/** Default request timeout in milliseconds (30 seconds) */
+const DEFAULT_TIMEOUT_MS = 30000;
+
 /**
- * Custom error class for API errors.
+ * Custom error class for API errors (HTTP error responses).
  */
 export class ApiRequestError extends Error {
   public readonly statusCode: number;
@@ -24,16 +27,64 @@ export class ApiRequestError extends Error {
 }
 
 /**
- * Generic fetch wrapper with type safety and error handling.
+ * Error class for network failures (offline, DNS, CORS, etc.).
+ */
+export class NetworkError extends Error {
+  constructor(message: string = 'Network error - please check your connection') {
+    super(message);
+    this.name = 'NetworkError';
+  }
+}
+
+/**
+ * Error class for request timeouts.
+ */
+export class TimeoutError extends Error {
+  constructor(message: string = 'Request timed out - please try again') {
+    super(message);
+    this.name = 'TimeoutError';
+  }
+}
+
+/**
+ * Fetch with timeout support using AbortController.
+ * @param url - Full URL to fetch
+ * @param timeoutMs - Timeout in milliseconds (default: 30 seconds)
+ * @returns Promise resolving to Response
+ * @throws TimeoutError if request times out
+ * @throws NetworkError if network fails
+ */
+async function fetchWithTimeout(url: string, timeoutMs: number = DEFAULT_TIMEOUT_MS): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new TimeoutError();
+    }
+    // Network failure (offline, DNS, CORS, etc.)
+    throw new NetworkError();
+  }
+}
+
+/**
+ * Generic fetch wrapper with type safety, error handling, and timeout.
  *
  * @param endpoint - API endpoint path (e.g., '/api/sites/')
  * @returns Promise resolving to typed response data
- * @throws ApiRequestError if request fails
+ * @throws ApiRequestError if HTTP error response
+ * @throws NetworkError if network fails
+ * @throws TimeoutError if request times out
  */
 export async function fetchApi<T>(endpoint: string): Promise<T> {
   const url = `${API_URL}${endpoint}`;
 
-  const response = await fetch(url);
+  const response = await fetchWithTimeout(url);
 
   if (!response.ok) {
     let errorMessage = 'API request failed';
