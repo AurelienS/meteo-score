@@ -25,19 +25,19 @@ const CONFIDENCE_CONFIG: Record<ConfidenceLevel, {
 }> = {
   validated: {
     icon: '✅',
-    colorClass: 'text-green-700',
+    colorClass: 'text-status-success-text',
     title: 'Validated Data',
     message: 'Metrics are statistically reliable (90+ days)',
   },
   preliminary: {
     icon: '🔶',
-    colorClass: 'text-orange-700',
+    colorClass: 'text-status-warning-text',
     title: 'Preliminary Data',
     message: 'Results will stabilize with more data (30-89 days)',
   },
   insufficient: {
     icon: '⚠️',
-    colorClass: 'text-red-700',
+    colorClass: 'text-status-error-text',
     title: 'Insufficient Data',
     message: 'Collect more data for reliable metrics (<30 days)',
   },
@@ -107,46 +107,46 @@ const DataFreshnessIndicator: Component<DataFreshnessIndicatorProps> = (props) =
   const confidenceInfo = createMemo(() => CONFIDENCE_CONFIG[props.confidenceLevel]);
 
   return (
-    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-      <h4 class="text-sm font-semibold text-gray-700 mb-3">Data Information</h4>
+    <div class="bg-theme-bg-primary border border-theme-border-primary rounded-lg p-6 shadow-sm">
+      <h4 class="text-base font-semibold text-theme-text-primary mb-4">Data Information</h4>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Last Updated */}
         <div>
-          <p class="text-xs text-gray-500 mb-1">Last Updated</p>
-          <p class="text-sm font-medium text-gray-900">
+          <p class="text-xs text-theme-text-tertiary mb-1">Last Updated</p>
+          <p class="text-sm font-medium text-theme-text-primary">
             {formatRelativeTime(props.lastUpdate, now())}
           </p>
-          <p class="text-xs text-gray-500">
+          <p class="text-xs text-theme-text-tertiary">
             {formatDate(props.lastUpdate)}
           </p>
         </div>
 
         {/* Sample Size */}
         <div>
-          <p class="text-xs text-gray-500 mb-1">Sample Size</p>
-          <p class="text-sm font-medium text-gray-900">
+          <p class="text-xs text-theme-text-tertiary mb-1">Sample Size</p>
+          <p class="text-sm font-medium text-theme-text-primary">
             {props.sampleSize.toLocaleString()} measurements
           </p>
-          <p class="text-xs text-gray-500">
+          <p class="text-xs text-theme-text-tertiary">
             {daysOfData()} days of data
           </p>
         </div>
 
         {/* Data Range */}
         <div>
-          <p class="text-xs text-gray-500 mb-1">Data Range</p>
-          <p class="text-sm font-medium text-gray-900">
+          <p class="text-xs text-theme-text-tertiary mb-1">Data Range</p>
+          <p class="text-sm font-medium text-theme-text-primary">
             {formatDate(props.dateRange.start)}
           </p>
-          <p class="text-xs text-gray-500">
+          <p class="text-xs text-theme-text-tertiary">
             to {formatDate(props.dateRange.end)}
           </p>
         </div>
       </div>
 
       {/* Confidence Level Indicator */}
-      <div class="mt-4 pt-4 border-t border-gray-200">
+      <div class="mt-4 pt-4 border-t border-theme-border-secondary">
         <div class={`flex items-center gap-2 ${confidenceInfo().colorClass}`}>
           <div class="text-lg">{confidenceInfo().icon}</div>
           <div>

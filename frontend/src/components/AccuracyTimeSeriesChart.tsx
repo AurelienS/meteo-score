@@ -141,13 +141,15 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
           .tickFormat((d: Date | d3.NumberValue) => d3.timeFormat('%b %d')(d as Date))
       )
       .selectAll('text')
-      .attr('class', 'text-xs fill-gray-600');
+      .attr('class', 'text-xs')
+      .style('fill', 'var(--color-text-secondary)');
 
     // Y Axis
     svg.append('g')
       .call(d3.axisLeft(yScale).ticks(6))
       .selectAll('text')
-      .attr('class', 'text-xs fill-gray-600');
+      .attr('class', 'text-xs')
+      .style('fill', 'var(--color-text-secondary)');
 
     // Y-axis label
     svg.append('text')
@@ -155,7 +157,8 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
       .attr('y', -margin.left + 15)
       .attr('x', -height / 2)
       .attr('text-anchor', 'middle')
-      .attr('class', 'text-sm fill-gray-600')
+      .attr('class', 'text-sm')
+      .style('fill', 'var(--color-text-secondary)')
       .text(`MAE (${props.parameterUnit})`);
 
     // Line generator
@@ -194,7 +197,8 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
       legendG.append('text')
         .attr('x', 25)
         .attr('y', legendY + 14)
-        .attr('class', 'text-xs fill-gray-700')
+        .attr('class', 'text-xs')
+        .style('fill', 'var(--color-text-secondary)')
         .text(truncateForLegend(model.modelName, isMobile));
     });
 
@@ -248,13 +252,13 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
           .style('left', `${event.pageX + 15}px`)
           .style('top', `${event.pageY - 10}px`)
           .html(`
-            <div class="font-semibold mb-1 text-gray-900">${d3.timeFormat('%b %d, %Y')(date)}</div>
+            <div class="font-semibold mb-1" style="color: var(--color-text-primary)">${d3.timeFormat('%b %d, %Y')(date)}</div>
             ${values.map(v => {
               const safeName = escapeHtml(v.model.modelName);
               return `<div class="flex items-center gap-2">
                 <span class="w-3 h-0.5 inline-block" style="background-color: ${v.model.color}"></span>
                 <span style="color: ${v.model.color}">${safeName}:</span>
-                <span class="font-medium">${v.point.mae.toFixed(1)} ${safeUnit}</span>
+                <span class="font-medium" style="color: var(--color-text-primary)">${v.point.mae.toFixed(1)} ${safeUnit}</span>
               </div>`;
             }).join('')}
           `);
@@ -266,11 +270,14 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
   };
 
   onMount(() => {
-    // Create tooltip element
+    // Create tooltip element with theme-aware styling via CSS variables
+    // Use bg-primary for cards/elevated surfaces (lighter than page in dark mode)
     tooltipRef = d3.select('body')
       .append('div')
-      .attr('class', 'fixed bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm shadow-lg pointer-events-none z-50')
-      .style('opacity', '0');
+      .attr('class', 'fixed rounded-lg px-3 py-2 text-sm shadow-lg pointer-events-none z-50')
+      .style('opacity', '0')
+      .style('background-color', 'var(--color-bg-primary)')
+      .style('border', '1px solid var(--color-border-primary)');
 
     // Initial draw
     drawChart();
@@ -299,16 +306,16 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
   });
 
   return (
-    <div class="bg-white rounded-lg shadow-sm">
-      <h3 class="text-base md:text-lg font-semibold text-gray-900 p-4 md:p-6 pb-2">
+    <div class="bg-theme-bg-primary rounded-lg shadow-sm border border-theme-border-primary">
+      <h3 class="text-base md:text-lg font-semibold text-theme-text-primary p-4 md:p-6 pb-2">
         Accuracy Evolution Over Time
       </h3>
 
       {/* Empty state */}
       <Show when={props.models.length === 0}>
         <div class="p-6 pt-2">
-          <div class="bg-gray-50 rounded-lg p-8 text-center">
-            <p class="text-gray-500">No time series data available</p>
+          <div class="bg-theme-bg-tertiary rounded-lg p-8 text-center">
+            <p class="text-theme-text-tertiary">No time series data available</p>
           </div>
         </div>
       </Show>

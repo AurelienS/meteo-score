@@ -25,6 +25,42 @@ export default {
           800: '#1e40af',
           900: '#1e3a8a',
         },
+        // Theme-aware colors using CSS variables
+        theme: {
+          bg: {
+            primary: 'var(--color-bg-primary)',
+            secondary: 'var(--color-bg-secondary)',
+            tertiary: 'var(--color-bg-tertiary)',
+          },
+          text: {
+            primary: 'var(--color-text-primary)',
+            secondary: 'var(--color-text-secondary)',
+            tertiary: 'var(--color-text-tertiary)',
+            muted: 'var(--color-text-muted)',
+          },
+          border: {
+            primary: 'var(--color-border-primary)',
+            secondary: 'var(--color-border-secondary)',
+          },
+        },
+        // Semantic status colors with theme support
+        status: {
+          success: {
+            bg: 'var(--color-status-success-bg)',
+            text: 'var(--color-status-success-text)',
+            border: 'var(--color-status-success-border)',
+          },
+          warning: {
+            bg: 'var(--color-status-warning-bg)',
+            text: 'var(--color-status-warning-text)',
+            border: 'var(--color-status-warning-border)',
+          },
+          error: {
+            bg: 'var(--color-status-error-bg)',
+            text: 'var(--color-status-error-text)',
+            border: 'var(--color-status-error-border)',
+          },
+        },
       },
     },
   },

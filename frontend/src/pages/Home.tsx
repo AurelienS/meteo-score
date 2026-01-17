@@ -251,16 +251,16 @@ const Home: Component = () => {
 
   return (
     <div class="container mx-auto px-4 py-8">
-      <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+      <h1 class="text-2xl md:text-3xl font-bold text-theme-text-primary mb-2">
         {t('brand')}
       </h1>
-      <p class="text-sm md:text-base text-gray-600 mb-8">
+      <p class="text-sm md:text-base text-theme-text-secondary mb-8">
         {t('home.subtitle')}
       </p>
 
       {/* Error state for initial load */}
       <Show when={error()}>
-        <div role="alert" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+        <div role="alert" class="bg-status-error-bg border border-status-error-border text-status-error-text px-4 py-3 rounded-lg mb-6">
           <p class="font-medium">{t('home.errorLoadingData')}</p>
           <p class="text-sm mb-3">{getTranslatedError(error())}</p>
           <button
@@ -276,12 +276,12 @@ const Home: Component = () => {
 
       {/* Loading state for selectors */}
       <Show when={isLoadingSelectors()}>
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="bg-theme-bg-primary rounded-lg shadow-md border border-theme-border-primary p-6">
           <div class="animate-pulse space-y-4">
-            <div class="h-4 bg-gray-200 rounded w-1/4" />
-            <div class="h-10 bg-gray-200 rounded" />
-            <div class="h-4 bg-gray-200 rounded w-1/4" />
-            <div class="h-6 bg-gray-200 rounded w-1/2" />
+            <div class="h-4 bg-theme-bg-tertiary rounded w-1/4" />
+            <div class="h-10 bg-theme-bg-tertiary rounded" />
+            <div class="h-4 bg-theme-bg-tertiary rounded w-1/4" />
+            <div class="h-6 bg-theme-bg-tertiary rounded w-1/2" />
           </div>
         </div>
       </Show>
@@ -289,7 +289,7 @@ const Home: Component = () => {
       {/* Main content when selectors are loaded */}
       <Show when={!isLoadingSelectors() && !error()}>
         {/* Selectors - responsive grid */}
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6 relative z-20">
+        <div class="bg-theme-bg-primary rounded-lg shadow-md border border-theme-border-primary p-6 mb-6 relative z-20">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <SiteSelector
               sites={sites()}
@@ -311,7 +311,7 @@ const Home: Component = () => {
 
         {/* Accuracy error state */}
         <Show when={accuracyError()}>
-          <div role="alert" class="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-lg mb-6">
+          <div role="alert" class="bg-status-warning-bg border border-status-warning-border text-status-warning-text px-4 py-3 rounded-lg mb-6">
             <p class="font-medium">{t('home.couldNotLoadAccuracy')}</p>
             <p class="text-sm mb-3">{getTranslatedError(accuracyError())}</p>
             <button
@@ -327,10 +327,10 @@ const Home: Component = () => {
 
         {/* Loading state for accuracy data */}
         <Show when={isLoadingAccuracy()}>
-          <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div class="bg-theme-bg-primary rounded-lg shadow-md border border-theme-border-primary p-6 mb-6">
             <div class="animate-pulse space-y-4">
-              <div class="h-6 bg-gray-200 rounded w-1/3" />
-              <div class="h-40 bg-gray-200 rounded" />
+              <div class="h-6 bg-theme-bg-tertiary rounded w-1/3" />
+              <div class="h-40 bg-theme-bg-tertiary rounded" />
             </div>
           </div>
         </Show>
@@ -340,7 +340,7 @@ const Home: Component = () => {
           {(data) => (
             <>
               {/* Model comparison table */}
-              <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+              <div class="bg-theme-bg-primary rounded-lg shadow-md border border-theme-border-primary p-6 mb-6">
                 <ModelComparisonTable
                   models={data().models}
                   parameterUnit={selectedParameterUnit()}
@@ -364,7 +364,7 @@ const Home: Component = () => {
               {/* Bias characterization cards */}
               <Show when={data().models.length > 0}>
                 <div class="mb-6">
-                  <h2 class="text-base md:text-lg font-semibold text-gray-900 mb-4">
+                  <h2 class="text-base md:text-lg font-semibold text-theme-text-primary mb-4">
                     {t('home.biasCharacterization')}
                   </h2>
                   <div class="space-y-4">
@@ -385,7 +385,7 @@ const Home: Component = () => {
 
               {/* Time series error state */}
               <Show when={timeSeriesError()}>
-                <div role="alert" class="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-lg mb-6">
+                <div role="alert" class="bg-status-warning-bg border border-status-warning-border text-status-warning-text px-4 py-3 rounded-lg mb-6">
                   <p class="font-medium">{t('home.couldNotLoadTimeSeries')}</p>
                   <p class="text-sm mb-3">{getTranslatedError(timeSeriesError())}</p>
                   <button
@@ -401,10 +401,10 @@ const Home: Component = () => {
 
               {/* Time series chart loading state */}
               <Show when={isLoadingTimeSeries()}>
-                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div class="bg-theme-bg-primary rounded-lg shadow-md border border-theme-border-primary p-6 mb-6">
                   <div class="animate-pulse space-y-4">
-                    <div class="h-6 bg-gray-200 rounded w-1/3" />
-                    <div class="h-80 bg-gray-200 rounded" />
+                    <div class="h-6 bg-theme-bg-tertiary rounded w-1/3" />
+                    <div class="h-80 bg-theme-bg-tertiary rounded" />
                   </div>
                 </div>
               </Show>

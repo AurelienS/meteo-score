@@ -82,13 +82,13 @@ function StatusBadge(props: { status: string }): JSX.Element {
   const badgeClass = () => {
     switch (props.status) {
       case 'success':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+        return 'bg-status-success-bg text-status-success-text border border-status-success-border';
       case 'partial':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+        return 'bg-status-warning-bg text-status-warning-text border border-status-warning-border';
       case 'failed':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+        return 'bg-status-error-bg text-status-error-text border border-status-error-border';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+        return 'bg-theme-bg-tertiary text-theme-text-secondary';
     }
   };
 
@@ -165,8 +165,8 @@ function ExecutionHistoryTable(props: {
                       </td>
                     </tr>
                     <Show when={record.errors && record.errors.length > 0}>
-                      <tr class="bg-red-50 dark:bg-red-900/20">
-                        <td colspan="4" class="py-2 px-2 text-xs text-red-600 dark:text-red-400">
+                      <tr class="bg-status-error-bg">
+                        <td colspan="4" class="py-2 px-2 text-xs text-status-error-text">
                           <For each={record.errors}>
                             {(error) => <div>{error}</div>}
                           </For>
@@ -325,7 +325,7 @@ function LoginForm(props: {
         </h1>
 
         <Show when={props.error}>
-          <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded mb-4">
+          <div class="bg-status-error-bg border border-status-error-border text-status-error-text px-4 py-3 rounded mb-4">
             {props.error}
           </div>
         </Show>
@@ -674,7 +674,7 @@ export default function Admin(): JSX.Element {
 
       {/* Error Alert */}
       <Show when={error()}>
-        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-6">
+        <div class="bg-status-error-bg border border-status-error-border text-status-error-text px-4 py-3 rounded-lg mb-6">
           <div class="flex items-center">
             <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path
@@ -690,7 +690,7 @@ export default function Admin(): JSX.Element {
 
       {/* Action Message */}
       <Show when={actionMessage()}>
-        <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg mb-6">
+        <div class="bg-status-success-bg border border-status-success-border text-status-success-text px-4 py-3 rounded-lg mb-6">
           <div class="flex items-center">
             <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path

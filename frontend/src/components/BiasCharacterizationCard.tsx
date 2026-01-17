@@ -92,7 +92,7 @@ const BiasCharacterizationCard: Component<BiasCharacterizationCardProps> = (prop
 
   return (
     <div
-      class={`border-l-4 ${interpretation().borderColor} bg-white p-6 rounded-lg shadow-sm`}
+      class={`border-l-4 ${interpretation().borderColor} bg-theme-bg-primary p-6 rounded-lg shadow-sm border border-theme-border-primary`}
     >
       <div class="flex items-start">
         {/* Icon - decorative, hidden from screen readers */}
@@ -102,22 +102,22 @@ const BiasCharacterizationCard: Component<BiasCharacterizationCardProps> = (prop
 
         <div class="flex-1">
           {/* Title */}
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">
+          <h3 class="text-lg font-semibold text-theme-text-primary mb-2">
             {interpretation().title}
           </h3>
 
           {/* Description */}
-          <p class="text-gray-700 mb-3">
+          <p class="text-theme-text-secondary mb-3">
             {interpretation().description}
           </p>
 
           {/* Practical example - only show if we have enough data */}
           <Show when={props.confidenceLevel !== 'insufficient'}>
-            <div class="mt-4 p-4 bg-gray-50 rounded">
-              <p class="text-sm font-medium text-gray-700 mb-2">
+            <div class="mt-4 p-4 bg-theme-bg-tertiary rounded">
+              <p class="text-sm font-medium text-theme-text-secondary mb-2">
                 Practical Example:
               </p>
-              <p class="text-sm text-gray-600">
+              <p class="text-sm text-theme-text-secondary">
                 If {props.modelName} forecasts {props.parameterName.toLowerCase()} at {exampleForecast()} {props.parameterUnit}, expect actual conditions around{' '}
                 <span class="font-semibold">
                   {adjustedValue().toFixed(0)} {props.parameterUnit}
@@ -129,12 +129,12 @@ const BiasCharacterizationCard: Component<BiasCharacterizationCardProps> = (prop
 
           {/* Confidence warnings */}
           <Show when={props.confidenceLevel === 'preliminary'}>
-            <p class="text-sm text-orange-600 mt-3">
+            <p class="text-sm text-status-warning-text mt-3">
               ⚠️ This bias characterization is preliminary. Results will stabilize with more data.
             </p>
           </Show>
           <Show when={props.confidenceLevel === 'insufficient'}>
-            <p class="text-sm text-red-600 mt-3">
+            <p class="text-sm text-status-error-text mt-3">
               ⚠️ Insufficient data to reliably characterize bias.
             </p>
           </Show>

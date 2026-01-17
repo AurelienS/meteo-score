@@ -14,10 +14,10 @@ import Admin from './pages/Admin';
  */
 function ErrorFallback(props: { error: Error; reset: () => void }): JSX.Element {
   return (
-    <div class="min-h-screen flex items-center justify-center bg-red-50">
-      <div class="bg-white p-8 rounded-lg shadow-lg max-w-md">
-        <h1 class="text-2xl font-bold text-red-600 mb-4">Something went wrong</h1>
-        <p class="text-gray-600 mb-4">{props.error.message}</p>
+    <div class="min-h-screen flex items-center justify-center bg-status-error-bg">
+      <div class="bg-theme-bg-secondary p-8 rounded-lg shadow-lg max-w-md">
+        <h1 class="text-2xl font-bold text-status-error-text mb-4">Something went wrong</h1>
+        <p class="text-theme-text-secondary mb-4">{props.error.message}</p>
         <button
           onClick={() => props.reset()}
           class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
@@ -51,9 +51,9 @@ function Layout(props: { children?: JSX.Element }): JSX.Element {
 function NotFound(): JSX.Element {
   return (
     <div class="container mx-auto px-4 py-16 text-center">
-      <h1 class="text-6xl font-bold text-gray-300 mb-4">404</h1>
-      <h2 class="text-2xl font-semibold text-gray-700 mb-4">Page Not Found</h2>
-      <p class="text-gray-600 mb-8">The page you're looking for doesn't exist.</p>
+      <h1 class="text-6xl font-bold text-theme-text-muted mb-4">404</h1>
+      <h2 class="text-2xl font-semibold text-theme-text-secondary mb-4">Page Not Found</h2>
+      <p class="text-theme-text-secondary mb-8">The page you're looking for doesn't exist.</p>
       <A
         href="/"
         class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"

@@ -22,7 +22,7 @@ const HorizonSelector: Component<HorizonSelectorProps> = (props) => {
     <div class="w-full">
       <label
         id={`${groupId}-label`}
-        class="block text-sm font-medium text-gray-700 mb-2"
+        class="block text-sm font-medium text-theme-text-secondary mb-2"
       >
         Forecast Horizon
       </label>
@@ -40,7 +40,7 @@ const HorizonSelector: Component<HorizonSelectorProps> = (props) => {
               class={`px-4 py-2 min-h-[44px] min-w-[44px] rounded-lg font-medium transition-colors ${
                 props.selectedHorizon === horizon
                   ? 'bg-primary-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-theme-bg-tertiary text-theme-text-secondary hover:bg-theme-bg-primary'
               }`}
               onClick={() => props.onHorizonChange(horizon)}
             >
