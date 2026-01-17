@@ -7,6 +7,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import SiteDetail from './pages/SiteDetail';
 import About from './pages/About';
+import Admin from './pages/Admin';
 
 /**
  * Error fallback component for unhandled errors.
@@ -70,6 +71,7 @@ const App: Component = () => {
         <Route path="/" component={Home} />
         <Route path="/sites/:id" component={SiteDetail} />
         <Route path="/about" component={About} />
+        <Route path="/admin" component={Admin} />
         <Route path="*" component={NotFound} />
       </Router>
     </ErrorBoundary>

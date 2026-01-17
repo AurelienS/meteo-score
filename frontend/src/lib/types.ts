@@ -110,3 +110,49 @@ export interface TimeSeriesAccuracyResponse {
   granularity: string;
   dataPoints: TimeSeriesDataPoint[];
 }
+
+// Admin API types
+
+/** Execution record for a scheduled job */
+export interface ExecutionRecord {
+  startTime: string;
+  endTime: string;
+  durationSeconds: number;
+  status: 'success' | 'partial' | 'failed';
+  recordsCollected: number;
+  errors?: string[];
+}
+
+/** Admin scheduler status response */
+export interface AdminSchedulerStatusResponse {
+  running: boolean;
+  forecastHistory: ExecutionRecord[];
+  observationHistory: ExecutionRecord[];
+}
+
+/** Scheduled job information */
+export interface ScheduledJobInfo {
+  id: string;
+  name: string;
+  nextRunTime: string | null;
+  trigger: string;
+}
+
+/** Scheduler jobs response */
+export interface SchedulerJobsResponse {
+  jobs: ScheduledJobInfo[];
+}
+
+/** Toggle scheduler response */
+export interface ToggleResponse {
+  running: boolean;
+  message: string;
+}
+
+/** Manual collection response */
+export interface CollectionResponse {
+  status: string;
+  recordsCollected: number;
+  durationSeconds: number;
+  errors?: string[];
+}

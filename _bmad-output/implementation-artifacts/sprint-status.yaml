@@ -85,7 +85,7 @@ development_status:
   epic-4-retrospective: optional
 
   # Epic 5: Admin Dashboard & Collection Monitoring
-  epic-5: in-progress
+  epic-5: done
   5-1-backend-admin-api-with-basic-auth: done
-  5-2-frontend-admin-dashboard-page: backlog
+  5-2-frontend-admin-dashboard-page: done
   epic-5-retrospective: optional

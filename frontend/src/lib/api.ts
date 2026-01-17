@@ -3,7 +3,19 @@
  * Provides typed fetch wrapper with error handling, timeout, and network error detection.
  */
 
-import type { ApiError, HealthResponse, Site, Parameter, PaginatedResponse, SiteAccuracyResponse, TimeSeriesAccuracyResponse } from './types';
+import type {
+  ApiError,
+  HealthResponse,
+  Site,
+  Parameter,
+  PaginatedResponse,
+  SiteAccuracyResponse,
+  TimeSeriesAccuracyResponse,
+  AdminSchedulerStatusResponse,
+  SchedulerJobsResponse,
+  ToggleResponse,
+  CollectionResponse,
+} from './types';
 
 /** Base API URL from environment or default to local backend */
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -196,4 +208,99 @@ export async function fetchAccuracyTimeSeries(
   return fetchApi<TimeSeriesAccuracyResponse>(
     `/api/v1/analysis/sites/${siteId}/accuracy/timeseries?modelId=${modelId}&parameterId=${parameterId}&granularity=${granularity}`
   );
+}
+
+// =============================================================================
+// Admin API functions (require Basic Auth)
+// =============================================================================
+
+/**
+ * Fetch with Basic Auth support and POST method.
+ * Browser will prompt for credentials on 401 response.
+ */
+async function fetchAdminApi<T>(
+  endpoint: string,
+  method: 'GET' | 'POST' = 'GET'
+): Promise<T> {
+  const url = `${API_URL}${endpoint}`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, {
+      method,
+      signal: controller.signal,
+      credentials: 'include', // Include credentials for Basic Auth
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      let errorMessage = 'API request failed';
+      let errorType = 'ApiError';
+
+      // Special handling for auth errors
+      if (response.status === 401) {
+        throw new ApiRequestError('Authentication required', 401, 'AuthError');
+      }
+      if (response.status === 429) {
+        throw new ApiRequestError('Too many failed attempts. Please wait and try again.', 429, 'RateLimitError');
+      }
+
+      try {
+        const errorData: ApiError = await response.json();
+        errorMessage = errorData.detail || errorMessage;
+        errorType = errorData.error || errorType;
+      } catch {
+        // Response wasn't JSON
+      }
+
+      throw new ApiRequestError(errorMessage, response.status, errorType);
+    }
+
+    return response.json() as Promise<T>;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof ApiRequestError) {
+      throw error;
+    }
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new TimeoutError();
+    }
+    throw new NetworkError();
+  }
+}
+
+/**
+ * Fetch admin scheduler status with execution history.
+ */
+export async function fetchAdminSchedulerStatus(): Promise<AdminSchedulerStatusResponse> {
+  return fetchAdminApi<AdminSchedulerStatusResponse>('/api/admin/scheduler/status');
+}
+
+/**
+ * Fetch scheduled jobs with next run times.
+ */
+export async function fetchAdminSchedulerJobs(): Promise<SchedulerJobsResponse> {
+  return fetchAdminApi<SchedulerJobsResponse>('/api/admin/scheduler/jobs');
+}
+
+/**
+ * Toggle scheduler on/off.
+ */
+export async function toggleScheduler(): Promise<ToggleResponse> {
+  return fetchAdminApi<ToggleResponse>('/api/admin/scheduler/toggle', 'POST');
+}
+
+/**
+ * Trigger manual forecast collection.
+ */
+export async function triggerForecastCollection(): Promise<CollectionResponse> {
+  return fetchAdminApi<CollectionResponse>('/api/admin/collect/forecasts', 'POST');
+}
+
+/**
+ * Trigger manual observation collection.
+ */
+export async function triggerObservationCollection(): Promise<CollectionResponse> {
+  return fetchAdminApi<CollectionResponse>('/api/admin/collect/observations', 'POST');
 }

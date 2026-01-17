@@ -61,7 +61,8 @@
       "Bash(timeout 8 npm run dev:*)",
       "Bash(npm install)",
       "Bash(npm run build:*)",
-      "Bash(docker run:*)"
+      "Bash(docker run:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []
