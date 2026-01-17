@@ -172,9 +172,9 @@
     "weatherParameter": "Weather Parameter",
     "noParameters": "No parameters available",
     "forecastHorizon": "Forecast Horizon",
-    "wind": "Wind",
-    "direction": "Direction",
-    "temperature": "Temp"
+    "windSpeed": "Speed",
+    "windDirection": "Direction",
+    "temperature": "Temperature"
   },
   "components": {
     "bias": {

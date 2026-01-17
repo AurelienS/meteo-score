@@ -22,9 +22,12 @@ interface ParameterDisplayInfo {
 
 /** Mapping of parameter API names to display info */
 const PARAMETER_CONFIG: Record<string, ParameterDisplayInfo> = {
-  'wind_speed': { labelKey: 'selectors.wind', emoji: '💨' },
-  'wind_direction': { labelKey: 'selectors.direction', emoji: '🧭' },
+  'wind_speed': { labelKey: 'selectors.windSpeed', emoji: '🌬️' },
+  'Wind Speed': { labelKey: 'selectors.windSpeed', emoji: '🌬️' },
+  'wind_direction': { labelKey: 'selectors.windDirection', emoji: '🧭' },
+  'Wind Direction': { labelKey: 'selectors.windDirection', emoji: '🧭' },
   'temperature': { labelKey: 'selectors.temperature', emoji: '🌡️' },
+  'Temperature': { labelKey: 'selectors.temperature', emoji: '🌡️' },
 };
 
 /**
