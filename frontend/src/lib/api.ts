@@ -128,7 +128,7 @@ export async function checkHealth(): Promise<HealthResponse> {
  * @returns Promise resolving to array of sites
  */
 export async function fetchSites(): Promise<Site[]> {
-  const response = await fetchApi<PaginatedResponse<Site>>('/api/v1/sites/');
+  const response = await fetchApi<PaginatedResponse<Site>>('/api/sites/');
   return response.data;
 }
 
@@ -137,7 +137,7 @@ export async function fetchSites(): Promise<Site[]> {
  * @returns Promise resolving to array of parameters
  */
 export async function fetchParameters(): Promise<Parameter[]> {
-  const response = await fetchApi<PaginatedResponse<Parameter>>('/api/v1/parameters/');
+  const response = await fetchApi<PaginatedResponse<Parameter>>('/api/parameters/');
   return response.data;
 }
 
@@ -165,7 +165,7 @@ export async function fetchSiteAccuracy(
   }
 
   return fetchApi<SiteAccuracyResponse>(
-    `/api/v1/analysis/sites/${siteId}/accuracy?parameterId=${parameterId}&horizon=${horizon}`
+    `/api/analysis/sites/${siteId}/accuracy?parameterId=${parameterId}&horizon=${horizon}`
   );
 }
 
@@ -206,7 +206,7 @@ export async function fetchAccuracyTimeSeries(
   }
 
   return fetchApi<TimeSeriesAccuracyResponse>(
-    `/api/v1/analysis/sites/${siteId}/accuracy/timeseries?modelId=${modelId}&parameterId=${parameterId}&granularity=${granularity}`
+    `/api/analysis/sites/${siteId}/accuracy/timeseries?modelId=${modelId}&parameterId=${parameterId}&granularity=${granularity}`
   );
 }
 

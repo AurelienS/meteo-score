@@ -36,7 +36,7 @@ import { useI18n } from '../contexts/I18nContext';
 const AUTO_REFRESH_INTERVAL = 30000;
 
 /**
- * Format ISO date string to readable format using browser locale.
+ * Format ISO date string to readable format (24h).
  */
 function formatDateTime(isoString: string): string {
   const date = new Date(isoString);
@@ -47,6 +47,19 @@ function formatDateTime(isoString: string): string {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
+    hour12: false,
+  });
+}
+
+/**
+ * Format time only (24h).
+ */
+function formatTime(date: Date): string {
+  return date.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
   });
 }
 
@@ -69,13 +82,13 @@ function StatusBadge(props: { status: string }): JSX.Element {
   const badgeClass = () => {
     switch (props.status) {
       case 'success':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'partial':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
       case 'failed':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
     }
   };
 
@@ -99,45 +112,61 @@ function ExecutionHistoryTable(props: {
   durationLabel: string;
 }): JSX.Element {
   return (
-    <div class="bg-white rounded-lg shadow p-4">
-      <h3 class="text-lg font-semibold text-gray-800 mb-3">{props.title}</h3>
+    <div
+      class="rounded-lg shadow p-4 transition-colors"
+      style={{
+        "background-color": "var(--color-surface)",
+        "border": "1px solid var(--color-border)",
+      }}
+    >
+      <h3
+        class="text-lg font-semibold mb-3"
+        style={{ color: "var(--color-text-primary)" }}
+      >
+        {props.title}
+      </h3>
       <Show
         when={props.history.length > 0}
         fallback={
-          <p class="text-gray-500 text-sm italic">{props.noHistoryText}</p>
+          <p class="text-sm italic" style={{ color: "var(--color-text-muted)" }}>
+            {props.noHistoryText}
+          </p>
         }
       >
         <div class="overflow-x-auto">
           <table class="min-w-full text-sm">
             <thead>
-              <tr class="border-b border-gray-200">
-                <th class="text-left py-2 px-2 font-medium text-gray-600">{props.timeLabel}</th>
-                <th class="text-left py-2 px-2 font-medium text-gray-600">{props.statusLabel}</th>
-                <th class="text-right py-2 px-2 font-medium text-gray-600">{props.recordsLabel}</th>
-                <th class="text-right py-2 px-2 font-medium text-gray-600">{props.durationLabel}</th>
+              <tr style={{ "border-bottom": "1px solid var(--color-border)" }}>
+                <th class="text-left py-2 px-2 font-medium" style={{ color: "var(--color-text-secondary)" }}>{props.timeLabel}</th>
+                <th class="text-left py-2 px-2 font-medium" style={{ color: "var(--color-text-secondary)" }}>{props.statusLabel}</th>
+                <th class="text-right py-2 px-2 font-medium" style={{ color: "var(--color-text-secondary)" }}>{props.recordsLabel}</th>
+                <th class="text-right py-2 px-2 font-medium" style={{ color: "var(--color-text-secondary)" }}>{props.durationLabel}</th>
               </tr>
             </thead>
             <tbody>
               <For each={props.history}>
                 {(record) => (
                   <>
-                    <tr class="border-b border-gray-100 hover:bg-gray-50">
-                      <td class="py-2 px-2 text-gray-700">
+                    <tr
+                      class="hover:opacity-80 transition-opacity"
+                      style={{ "border-bottom": "1px solid var(--color-border)" }}
+                    >
+                      <td class="py-2 px-2" style={{ color: "var(--color-text-primary)" }}>
                         {formatDateTime(record.startTime)}
                       </td>
                       <td class="py-2 px-2">
                         <StatusBadge status={record.status} />
                       </td>
-                      <td class="py-2 px-2 text-right text-gray-700">
+                      <td class="py-2 px-2 text-right" style={{ color: "var(--color-text-primary)" }}>
                         {record.recordsCollected}
                       </td>
-                      <td class="py-2 px-2 text-right text-gray-700">
+                      <td class="py-2 px-2 text-right" style={{ color: "var(--color-text-primary)" }}>
                         {formatDuration(record.durationSeconds)}
                       </td>
                     </tr>
                     <Show when={record.errors && record.errors.length > 0}>
-                      <tr class="bg-red-50">
-                        <td colspan="4" class="py-2 px-2 text-xs text-red-600">
+                      <tr class="bg-red-50 dark:bg-red-900/20">
+                        <td colspan="4" class="py-2 px-2 text-xs text-red-600 dark:text-red-400">
                           <For each={record.errors}>
                             {(error) => <div>{error}</div>}
                           </For>
@@ -168,32 +197,48 @@ function ScheduledJobsTable(props: {
   notScheduledText: string;
 }): JSX.Element {
   return (
-    <div class="bg-white rounded-lg shadow p-4">
-      <h3 class="text-lg font-semibold text-gray-800 mb-3">{props.title}</h3>
+    <div
+      class="rounded-lg shadow p-4 transition-colors"
+      style={{
+        "background-color": "var(--color-surface)",
+        "border": "1px solid var(--color-border)",
+      }}
+    >
+      <h3
+        class="text-lg font-semibold mb-3"
+        style={{ color: "var(--color-text-primary)" }}
+      >
+        {props.title}
+      </h3>
       <Show
         when={props.jobs.length > 0}
         fallback={
-          <p class="text-gray-500 text-sm italic">{props.noJobsText}</p>
+          <p class="text-sm italic" style={{ color: "var(--color-text-muted)" }}>
+            {props.noJobsText}
+          </p>
         }
       >
         <div class="overflow-x-auto">
           <table class="min-w-full text-sm">
             <thead>
-              <tr class="border-b border-gray-200">
-                <th class="text-left py-2 px-2 font-medium text-gray-600">{props.jobLabel}</th>
-                <th class="text-left py-2 px-2 font-medium text-gray-600">{props.nextRunLabel}</th>
-                <th class="text-left py-2 px-2 font-medium text-gray-600">{props.triggerLabel}</th>
+              <tr style={{ "border-bottom": "1px solid var(--color-border)" }}>
+                <th class="text-left py-2 px-2 font-medium" style={{ color: "var(--color-text-secondary)" }}>{props.jobLabel}</th>
+                <th class="text-left py-2 px-2 font-medium" style={{ color: "var(--color-text-secondary)" }}>{props.nextRunLabel}</th>
+                <th class="text-left py-2 px-2 font-medium" style={{ color: "var(--color-text-secondary)" }}>{props.triggerLabel}</th>
               </tr>
             </thead>
             <tbody>
               <For each={props.jobs}>
                 {(job) => (
-                  <tr class="border-b border-gray-100 hover:bg-gray-50">
-                    <td class="py-2 px-2 text-gray-700 font-medium">{job.name}</td>
-                    <td class="py-2 px-2 text-gray-700">
+                  <tr
+                    class="hover:opacity-80 transition-opacity"
+                    style={{ "border-bottom": "1px solid var(--color-border)" }}
+                  >
+                    <td class="py-2 px-2 font-medium" style={{ color: "var(--color-text-primary)" }}>{job.name}</td>
+                    <td class="py-2 px-2" style={{ color: "var(--color-text-primary)" }}>
                       {job.nextRunTime ? formatDateTime(job.nextRunTime) : props.notScheduledText}
                     </td>
-                    <td class="py-2 px-2 text-gray-500 text-xs font-mono">
+                    <td class="py-2 px-2 text-xs font-mono" style={{ color: "var(--color-text-muted)" }}>
                       {job.trigger}
                     </td>
                   </tr>
@@ -261,19 +306,37 @@ function LoginForm(props: {
   }
 
   return (
-    <div class="min-h-screen flex items-center justify-center bg-gray-50">
-      <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6 text-center">{props.labels.title}</h1>
+    <div
+      class="min-h-screen flex items-center justify-center transition-colors"
+      style={{ "background-color": "var(--color-bg-secondary)" }}
+    >
+      <div
+        class="p-8 rounded-lg shadow-lg max-w-md w-full transition-colors"
+        style={{
+          "background-color": "var(--color-surface)",
+          "border": "1px solid var(--color-border)",
+        }}
+      >
+        <h1
+          class="text-2xl font-bold mb-6 text-center"
+          style={{ color: "var(--color-text-primary)" }}
+        >
+          {props.labels.title}
+        </h1>
 
         <Show when={props.error}>
-          <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+          <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded mb-4">
             {props.error}
           </div>
         </Show>
 
         <form onSubmit={handleSubmit}>
           <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-medium mb-2" for="username">
+            <label
+              class="block text-sm font-medium mb-2"
+              style={{ color: "var(--color-text-secondary)" }}
+              for="username"
+            >
               {props.labels.username}
             </label>
             <input
@@ -281,14 +344,23 @@ function LoginForm(props: {
               type="text"
               value={username()}
               onInput={(e) => setUsername(e.currentTarget.value)}
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              style={{
+                "background-color": "var(--color-bg-primary)",
+                "border": "1px solid var(--color-border)",
+                "color": "var(--color-text-primary)",
+              }}
               required
               autocomplete="username"
             />
           </div>
 
           <div class="mb-6">
-            <label class="block text-gray-700 text-sm font-medium mb-2" for="password">
+            <label
+              class="block text-sm font-medium mb-2"
+              style={{ color: "var(--color-text-secondary)" }}
+              for="password"
+            >
               {props.labels.password}
             </label>
             <input
@@ -296,7 +368,12 @@ function LoginForm(props: {
               type="password"
               value={password()}
               onInput={(e) => setPassword(e.currentTarget.value)}
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              style={{
+                "background-color": "var(--color-bg-primary)",
+                "border": "1px solid var(--color-border)",
+                "color": "var(--color-text-primary)",
+              }}
               required
               autocomplete="current-password"
             />
@@ -461,7 +538,7 @@ export default function Admin(): JSX.Element {
     try {
       const result = await triggerForecastCollection();
       setActionMessage(
-        `${t('admin.forecastCollection')}: ${result.status} - ${result.recordsCollected} ${t('admin.records').toLowerCase()} in ${formatDuration(result.durationSeconds)}`
+        `${t('admin.forecastCollection')}: ${result.status} - ${result.recordsCollected} ${t('admin.records').toLowerCase()} (${formatDuration(result.durationSeconds)})`
       );
       await fetchData();
     } catch (err) {
@@ -484,7 +561,7 @@ export default function Admin(): JSX.Element {
     try {
       const result = await triggerObservationCollection();
       setActionMessage(
-        `${t('admin.observationCollection')}: ${result.status} - ${result.recordsCollected} ${t('admin.records').toLowerCase()} in ${formatDuration(result.durationSeconds)}`
+        `${t('admin.observationCollection')}: ${result.status} - ${result.recordsCollected} ${t('admin.records').toLowerCase()} (${formatDuration(result.durationSeconds)})`
       );
       await fetchData();
     } catch (err) {
@@ -555,11 +632,16 @@ export default function Admin(): JSX.Element {
       {/* Header */}
       <div class="flex items-center justify-between mb-8">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">{t('admin.dashboard')}</h1>
+          <h1
+            class="text-3xl font-bold"
+            style={{ color: "var(--color-text-primary)" }}
+          >
+            {t('admin.dashboard')}
+          </h1>
           <Show when={lastRefresh()}>
-            <p class="text-sm text-gray-500 mt-1">
-              {t('admin.lastUpdated')}: {lastRefresh()?.toLocaleTimeString()}
-              <span class="ml-2 text-gray-400">({t('admin.autoRefresh')})</span>
+            <p class="text-sm mt-1" style={{ color: "var(--color-text-muted)" }}>
+              {t('admin.lastUpdated')}: {formatTime(lastRefresh()!)}
+              <span class="ml-2" style={{ color: "var(--color-text-muted)" }}>({t('admin.autoRefresh')})</span>
             </p>
           </Show>
         </div>
@@ -567,13 +649,23 @@ export default function Admin(): JSX.Element {
           <button
             onClick={() => fetchData()}
             disabled={isLoadingStatus()}
-            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50"
+            class="px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+            style={{
+              "background-color": "var(--color-surface)",
+              "border": "1px solid var(--color-border)",
+              "color": "var(--color-text-primary)",
+            }}
           >
             {t('admin.refresh')}
           </button>
           <button
             onClick={handleLogout}
-            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+            class="px-4 py-2 rounded-lg transition-colors"
+            style={{
+              "background-color": "var(--color-surface)",
+              "border": "1px solid var(--color-border)",
+              "color": "var(--color-text-primary)",
+            }}
           >
             {t('admin.logout')}
           </button>
@@ -582,7 +674,7 @@ export default function Admin(): JSX.Element {
 
       {/* Error Alert */}
       <Show when={error()}>
-        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-6">
           <div class="flex items-center">
             <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path
@@ -598,7 +690,7 @@ export default function Admin(): JSX.Element {
 
       {/* Action Message */}
       <Show when={actionMessage()}>
-        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
+        <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg mb-6">
           <div class="flex items-center">
             <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path
@@ -616,18 +708,29 @@ export default function Admin(): JSX.Element {
       <Show when={isLoadingStatus() && !status()}>
         <div class="flex items-center justify-center py-12">
           <div class="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" />
-          <span class="ml-3 text-gray-600">{t('admin.loadingAdminData')}</span>
+          <span class="ml-3" style={{ color: "var(--color-text-secondary)" }}>{t('admin.loadingAdminData')}</span>
         </div>
       </Show>
 
       {/* Main Content */}
       <Show when={status()}>
         {/* Scheduler Status & Controls */}
-        <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <div
+          class="rounded-lg shadow p-6 mb-6 transition-colors"
+          style={{
+            "background-color": "var(--color-surface)",
+            "border": "1px solid var(--color-border)",
+          }}
+        >
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             {/* Status Indicator */}
             <div class="flex items-center gap-4">
-              <h2 class="text-xl font-semibold text-gray-800">{t('admin.schedulerStatus')}</h2>
+              <h2
+                class="text-xl font-semibold"
+                style={{ color: "var(--color-text-primary)" }}
+              >
+                {t('admin.schedulerStatus')}
+              </h2>
               <div class="flex items-center gap-2" role="status" aria-live="polite">
                 <span
                   class={`h-3 w-3 rounded-full ${
@@ -637,7 +740,7 @@ export default function Admin(): JSX.Element {
                 />
                 <span
                   class={`font-medium ${
-                    status()?.running ? 'text-green-600' : 'text-red-600'
+                    status()?.running ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                   }`}
                 >
                   {status()?.running ? t('admin.running') : t('admin.stopped')}
@@ -651,7 +754,7 @@ export default function Admin(): JSX.Element {
                 when={!confirmStopScheduler()}
                 fallback={
                   <div class="flex items-center gap-2">
-                    <span class="text-red-600 font-medium">{t('admin.confirmStop')}</span>
+                    <span class="text-red-600 dark:text-red-400 font-medium">{t('admin.confirmStop')}</span>
                     <button
                       onClick={handleToggleScheduler}
                       disabled={isTogglingScheduler()}
@@ -664,7 +767,11 @@ export default function Admin(): JSX.Element {
                     </button>
                     <button
                       onClick={cancelStopScheduler}
-                      class="px-3 py-1 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded font-medium transition-colors"
+                      class="px-3 py-1 rounded font-medium transition-colors"
+                      style={{
+                        "background-color": "var(--color-bg-secondary)",
+                        "color": "var(--color-text-primary)",
+                      }}
                     >
                       {t('admin.cancel')}
                     </button>
