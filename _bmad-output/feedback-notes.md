@@ -45,7 +45,7 @@ Notes rapides capturées pendant le dev - à traiter en rétro BMAD.
 
 **Date:** 2026-01-17
 **Severity:** Critical
-**Status:** Open
+**Status:** ✅ Fixed (2026-01-17)
 
 **Symptom:**
 ```
@@ -86,8 +86,8 @@ data = await mp_collector.collect_forecast(
 ```
 
 **Testing Required:**
-- [ ] Fix parameter names in jobs.py
-- [ ] Add latitude/longitude from site config
+- [x] Fix parameter names in jobs.py ✅
+- [x] Add latitude/longitude from site config ✅
 - [ ] Run manual forecast collection test via admin API
 - [ ] Verify data is being collected in database
 - [ ] Run existing unit tests for collectors

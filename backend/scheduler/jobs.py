@@ -130,10 +130,12 @@ async def collect_all_forecasts() -> list[ForecastData]:
         mp_collector = MeteoParapenteCollector()
         for site in sites:
             try:
-                forecast_time = datetime.now(timezone.utc)
+                forecast_run = datetime.now(timezone.utc)
                 data = await mp_collector.collect_forecast(
                     site_id=site["site_id"],
-                    forecast_time=forecast_time,
+                    forecast_run=forecast_run,
+                    latitude=site["latitude"],
+                    longitude=site["longitude"],
                 )
                 all_data.extend(data)
                 logger.info(
@@ -155,10 +157,12 @@ async def collect_all_forecasts() -> list[ForecastData]:
         arome_collector = AROMECollector()
         for site in sites:
             try:
-                forecast_time = datetime.now(timezone.utc)
+                forecast_run = datetime.now(timezone.utc)
                 data = await arome_collector.collect_forecast(
                     site_id=site["site_id"],
-                    forecast_time=forecast_time,
+                    forecast_run=forecast_run,
+                    latitude=site["latitude"],
+                    longitude=site["longitude"],
                 )
                 all_data.extend(data)
                 logger.info(f"AROME: Collected {len(data)} records for {site['name']}")
