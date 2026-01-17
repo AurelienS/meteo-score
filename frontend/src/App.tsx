@@ -34,7 +34,10 @@ function ErrorFallback(props: { error: Error; reset: () => void }): JSX.Element 
  */
 function Layout(props: { children?: JSX.Element }): JSX.Element {
   return (
-    <div class="min-h-screen bg-gray-50 flex flex-col">
+    <div
+      class="min-h-screen flex flex-col transition-colors"
+      style={{ "background-color": "var(--color-bg-secondary)" }}
+    >
       <Navigation />
       <main class="flex-grow">{props.children}</main>
       <Footer />

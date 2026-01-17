@@ -2,6 +2,7 @@
 import { render } from 'solid-js/web';
 import './styles/index.css';
 import App from './App';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 const root = document.getElementById('root');
 
@@ -11,4 +12,11 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   );
 }
 
-render(() => <App />, root!);
+render(
+  () => (
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
+  ),
+  root!
+);

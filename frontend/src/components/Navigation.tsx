@@ -1,11 +1,13 @@
 import { createSignal, type Component } from 'solid-js';
 import { Show } from 'solid-js';
 import { A } from '@solidjs/router';
+import ThemeToggle from './ThemeToggle';
 
 /**
  * Navigation header component.
  * Provides responsive navigation with links to main pages.
  * Includes mobile hamburger menu for smaller screens.
+ * Includes theme toggle for dark/light mode.
  */
 const Navigation: Component = () => {
   const [isMenuOpen, setIsMenuOpen] = createSignal(false);
@@ -13,7 +15,13 @@ const Navigation: Component = () => {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen());
 
   return (
-    <nav class="bg-blue-600 text-white sticky top-0 z-50 shadow-md">
+    <nav
+      class="sticky top-0 z-50 shadow-md transition-colors"
+      style={{
+        "background-color": "var(--color-nav-bg)",
+        "color": "var(--color-nav-text)",
+      }}
+    >
       <div class="container mx-auto px-4">
         <div class="flex items-center justify-between h-16">
           {/* Logo/Brand */}
@@ -25,51 +33,58 @@ const Navigation: Component = () => {
           <div class="hidden md:flex items-center space-x-6">
             <A
               href="/"
-              class="hover:text-blue-200 transition-colors font-medium"
-              activeClass="text-blue-200 underline underline-offset-4"
+              class="hover:opacity-80 transition-opacity font-medium"
+              activeClass="underline underline-offset-4"
               end
             >
               Home
             </A>
             <A
               href="/methodology"
-              class="hover:text-blue-200 transition-colors font-medium"
-              activeClass="text-blue-200 underline underline-offset-4"
+              class="hover:opacity-80 transition-opacity font-medium"
+              activeClass="underline underline-offset-4"
             >
               Methodology
             </A>
+            <ThemeToggle />
           </div>
 
-          {/* Mobile Hamburger Button */}
-          <button
-            class="md:hidden p-2 rounded hover:bg-blue-700 transition-colors"
-            onClick={toggleMenu}
-            aria-label={isMenuOpen() ? 'Close menu' : 'Open menu'}
-            aria-expanded={isMenuOpen()}
-          >
-            <Show
-              when={isMenuOpen()}
-              fallback={
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              }
+          {/* Mobile: Theme Toggle + Hamburger */}
+          <div class="md:hidden flex items-center space-x-2">
+            <ThemeToggle />
+            <button
+              class="p-2 rounded hover:bg-white/10 transition-colors"
+              onClick={toggleMenu}
+              aria-label={isMenuOpen() ? 'Close menu' : 'Open menu'}
+              aria-expanded={isMenuOpen()}
             >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </Show>
-          </button>
+              <Show
+                when={isMenuOpen()}
+                fallback={
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                }
+              >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </Show>
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu Dropdown */}
         <Show when={isMenuOpen()}>
-          <div class="md:hidden pb-4 border-t border-blue-500">
+          <div
+            class="md:hidden pb-4 border-t transition-colors"
+            style={{ "border-color": "var(--color-border)" }}
+          >
             <div class="flex flex-col space-y-2 pt-4">
               <A
                 href="/"
-                class="px-2 py-2 rounded hover:bg-blue-700 transition-colors font-medium"
-                activeClass="bg-blue-700"
+                class="px-2 py-2 rounded hover:bg-white/10 transition-colors font-medium"
+                activeClass="bg-white/10"
                 onClick={() => setIsMenuOpen(false)}
                 end
               >
@@ -77,8 +92,8 @@ const Navigation: Component = () => {
               </A>
               <A
                 href="/methodology"
-                class="px-2 py-2 rounded hover:bg-blue-700 transition-colors font-medium"
-                activeClass="bg-blue-700"
+                class="px-2 py-2 rounded hover:bg-white/10 transition-colors font-medium"
+                activeClass="bg-white/10"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Methodology
