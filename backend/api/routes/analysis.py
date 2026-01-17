@@ -15,6 +15,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy import func as sql_func
+
 from api.schemas.analysis import (
     HorizonBiasData,
     ModelAccuracyMetrics,
@@ -24,7 +26,7 @@ from api.schemas.analysis import (
     TimeSeriesDataPoint,
 )
 from core.database import get_db
-from core.models import Model, Parameter, Site
+from core.models import Deviation, Model, Parameter, Site
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
 
@@ -75,20 +77,59 @@ class AnalysisService:
         models_result = await db.execute(select(Model))
         models = models_result.scalars().all()
 
-        # For now, return placeholder data
-        # In production, this would query MetricsService and ConfidenceService
+        # Calculate actual metrics from deviations
         model_metrics = []
         for model in models:
-            model_metrics.append({
-                "model_id": model.id,
-                "model_name": model.name,
-                "mae": 0.0,
-                "bias": 0.0,
-                "std_dev": 0.0,
-                "sample_size": 0,
-                "confidence_level": "insufficient",
-                "confidence_message": "No data available yet.",
-            })
+            # Query aggregated metrics from deviations
+            metrics_query = select(
+                sql_func.avg(sql_func.abs(Deviation.deviation)).label("mae"),
+                sql_func.avg(Deviation.deviation).label("bias"),
+                sql_func.stddev(Deviation.deviation).label("std_dev"),
+                sql_func.count().label("sample_size"),
+            ).where(
+                Deviation.site_id == site_id,
+                Deviation.model_id == model.id,
+                Deviation.parameter_id == parameter_id,
+                Deviation.horizon == horizon,
+            )
+
+            metrics_result = await db.execute(metrics_query)
+            row = metrics_result.first()
+
+            if row and row.sample_size and row.sample_size > 0:
+                sample_size = int(row.sample_size)
+                # Determine confidence level based on sample size
+                if sample_size >= 90:
+                    confidence_level = "validated"
+                    confidence_message = "Statistically significant data."
+                elif sample_size >= 30:
+                    confidence_level = "preliminary"
+                    confidence_message = "Trends visible but may change."
+                else:
+                    confidence_level = "insufficient"
+                    confidence_message = "Not enough data yet."
+
+                model_metrics.append({
+                    "model_id": model.id,
+                    "model_name": model.name,
+                    "mae": float(row.mae) if row.mae else 0.0,
+                    "bias": float(row.bias) if row.bias else 0.0,
+                    "std_dev": float(row.std_dev) if row.std_dev else 0.0,
+                    "sample_size": sample_size,
+                    "confidence_level": confidence_level,
+                    "confidence_message": confidence_message,
+                })
+            else:
+                model_metrics.append({
+                    "model_id": model.id,
+                    "model_name": model.name,
+                    "mae": 0.0,
+                    "bias": 0.0,
+                    "std_dev": 0.0,
+                    "sample_size": 0,
+                    "confidence_level": "insufficient",
+                    "confidence_message": "No data available yet.",
+                })
 
         if not model_metrics:
             return None
@@ -207,9 +248,44 @@ class AnalysisService:
         if not start_date:
             start_date = end_date - timedelta(days=90)
 
-        # Placeholder: return empty data points
-        # In production, this would query AggregateService
-        data_points: List[Dict[str, Any]] = []
+        # Determine truncation based on granularity
+        if granularity == "daily":
+            trunc_func = sql_func.date_trunc('day', Deviation.timestamp)
+        elif granularity == "weekly":
+            trunc_func = sql_func.date_trunc('week', Deviation.timestamp)
+        else:  # monthly
+            trunc_func = sql_func.date_trunc('month', Deviation.timestamp)
+
+        # Query aggregated time series data
+        ts_query = select(
+            trunc_func.label("bucket"),
+            sql_func.avg(sql_func.abs(Deviation.deviation)).label("mae"),
+            sql_func.avg(Deviation.deviation).label("bias"),
+            sql_func.count().label("sample_size"),
+        ).where(
+            Deviation.site_id == site_id,
+            Deviation.model_id == model_id,
+            Deviation.parameter_id == parameter_id,
+            Deviation.timestamp >= start_date,
+            Deviation.timestamp <= end_date,
+        ).group_by(
+            trunc_func
+        ).order_by(
+            trunc_func
+        )
+
+        ts_result = await db.execute(ts_query)
+        rows = ts_result.all()
+
+        data_points: List[Dict[str, Any]] = [
+            {
+                "bucket": row.bucket,
+                "mae": float(row.mae) if row.mae else 0.0,
+                "bias": float(row.bias) if row.bias else 0.0,
+                "sample_size": int(row.sample_size) if row.sample_size else 0,
+            }
+            for row in rows
+        ]
 
         return {
             "site_id": site.id,

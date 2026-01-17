@@ -289,7 +289,7 @@ const Home: Component = () => {
       {/* Main content when selectors are loaded */}
       <Show when={!isLoadingSelectors() && !error()}>
         {/* Selectors - responsive grid */}
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6 relative z-20">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <SiteSelector
               sites={sites()}
