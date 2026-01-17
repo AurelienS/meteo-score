@@ -83,3 +83,9 @@ development_status:
   4-9-methodology-and-transparency-page: done
   4-10-production-build-and-docker-integration: done
   epic-4-retrospective: optional
+
+  # Epic 5: Admin Dashboard & Collection Monitoring
+  epic-5: in-progress
+  5-1-backend-admin-api-with-basic-auth: done
+  5-2-frontend-admin-dashboard-page: backlog
+  epic-5-retrospective: optional

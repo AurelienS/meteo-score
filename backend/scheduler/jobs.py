@@ -24,8 +24,27 @@ from core.data_models import ForecastData, ObservationData
 
 logger = logging.getLogger(__name__)
 
-# Job execution tracking
-_job_executions: dict[str, dict[str, Any]] = {}
+# Job execution tracking - stores list of last N executions per job
+_job_executions: dict[str, list[dict[str, Any]]] = {}
+_MAX_EXECUTION_HISTORY = 10
+
+
+def _add_execution_record(job_id: str, record: dict[str, Any]) -> None:
+    """Add an execution record to the history, keeping only the last N records.
+
+    Args:
+        job_id: The job identifier (e.g., "collect_forecasts").
+        record: The execution record to add.
+    """
+    if job_id not in _job_executions:
+        _job_executions[job_id] = []
+
+    # Insert at the beginning (most recent first)
+    _job_executions[job_id].insert(0, record)
+
+    # Keep only the last N records
+    if len(_job_executions[job_id]) > _MAX_EXECUTION_HISTORY:
+        _job_executions[job_id] = _job_executions[job_id][:_MAX_EXECUTION_HISTORY]
 
 
 def get_last_execution(job_id: str) -> dict[str, Any] | None:
@@ -37,7 +56,22 @@ def get_last_execution(job_id: str) -> dict[str, Any] | None:
     Returns:
         Dict with start_time, end_time, status, records_collected, or None.
     """
-    return _job_executions.get(job_id)
+    history = _job_executions.get(job_id, [])
+    return history[0] if history else None
+
+
+def get_execution_history(job_id: str, limit: int = 10) -> list[dict[str, Any]]:
+    """Get execution history for a job.
+
+    Args:
+        job_id: The job identifier (e.g., "collect_forecasts").
+        limit: Maximum number of records to return (default 10).
+
+    Returns:
+        List of execution records, most recent first.
+    """
+    history = _job_executions.get(job_id, [])
+    return history[:limit]
 
 
 def get_site_configs() -> list[dict[str, Any]]:
@@ -85,6 +119,7 @@ async def collect_all_forecasts() -> list[ForecastData]:
     start_time = datetime.now(timezone.utc)
     all_data: list[ForecastData] = []
     status = "success"
+    errors: list[str] = []
 
     logger.info(f"Starting forecast collection at {start_time.isoformat()}")
 
@@ -105,13 +140,14 @@ async def collect_all_forecasts() -> list[ForecastData]:
                     f"MeteoParapente: Collected {len(data)} records for {site['name']}"
                 )
             except Exception as e:
-                logger.error(
-                    f"MeteoParapente collection failed for {site['name']}: {e}\n"
-                    f"{traceback.format_exc()}"
-                )
+                error_msg = f"MeteoParapente collection failed for {site['name']}: {e}"
+                logger.error(f"{error_msg}\n{traceback.format_exc()}")
+                errors.append(error_msg)
                 status = "partial"
     except Exception as e:
-        logger.error(f"MeteoParapente collector initialization failed: {e}")
+        error_msg = f"MeteoParapente collector initialization failed: {e}"
+        logger.error(error_msg)
+        errors.append(error_msg)
         status = "partial"
 
     # Collect from AROME
@@ -127,26 +163,31 @@ async def collect_all_forecasts() -> list[ForecastData]:
                 all_data.extend(data)
                 logger.info(f"AROME: Collected {len(data)} records for {site['name']}")
             except Exception as e:
-                logger.error(
-                    f"AROME collection failed for {site['name']}: {e}\n"
-                    f"{traceback.format_exc()}"
-                )
+                error_msg = f"AROME collection failed for {site['name']}: {e}"
+                logger.error(f"{error_msg}\n{traceback.format_exc()}")
+                errors.append(error_msg)
                 status = "partial"
     except Exception as e:
-        logger.error(f"AROME collector initialization failed: {e}")
+        error_msg = f"AROME collector initialization failed: {e}"
+        logger.error(error_msg)
+        errors.append(error_msg)
         status = "partial"
 
     end_time = datetime.now(timezone.utc)
     duration = (end_time - start_time).total_seconds()
 
-    # Track execution
-    _job_executions[job_id] = {
+    # Track execution with history
+    record: dict[str, Any] = {
         "start_time": start_time.isoformat(),
         "end_time": end_time.isoformat(),
         "duration_seconds": duration,
         "status": status,
         "records_collected": len(all_data),
     }
+    if errors:
+        record["errors"] = errors
+
+    _add_execution_record(job_id, record)
 
     logger.info(
         f"Forecast collection complete: {len(all_data)} records in {duration:.2f}s "
@@ -170,6 +211,7 @@ async def collect_all_observations() -> list[ObservationData]:
     start_time = datetime.now(timezone.utc)
     all_data: list[ObservationData] = []
     status = "success"
+    errors: list[str] = []
 
     logger.info(f"Starting observation collection at {start_time.isoformat()}")
 
@@ -188,13 +230,14 @@ async def collect_all_observations() -> list[ObservationData]:
                 all_data.extend(data)
                 logger.info(f"ROMMA: Collected {len(data)} records for {site['name']}")
             except Exception as e:
-                logger.error(
-                    f"ROMMA collection failed for {site['name']}: {e}\n"
-                    f"{traceback.format_exc()}"
-                )
+                error_msg = f"ROMMA collection failed for {site['name']}: {e}"
+                logger.error(f"{error_msg}\n{traceback.format_exc()}")
+                errors.append(error_msg)
                 status = "partial"
     except Exception as e:
-        logger.error(f"ROMMA collector initialization failed: {e}")
+        error_msg = f"ROMMA collector initialization failed: {e}"
+        logger.error(error_msg)
+        errors.append(error_msg)
         status = "partial"
 
     # Collect from FFVL
@@ -210,26 +253,31 @@ async def collect_all_observations() -> list[ObservationData]:
                 all_data.extend(data)
                 logger.info(f"FFVL: Collected {len(data)} records for {site['name']}")
             except Exception as e:
-                logger.error(
-                    f"FFVL collection failed for {site['name']}: {e}\n"
-                    f"{traceback.format_exc()}"
-                )
+                error_msg = f"FFVL collection failed for {site['name']}: {e}"
+                logger.error(f"{error_msg}\n{traceback.format_exc()}")
+                errors.append(error_msg)
                 status = "partial"
     except Exception as e:
-        logger.error(f"FFVL collector initialization failed: {e}")
+        error_msg = f"FFVL collector initialization failed: {e}"
+        logger.error(error_msg)
+        errors.append(error_msg)
         status = "partial"
 
     end_time = datetime.now(timezone.utc)
     duration = (end_time - start_time).total_seconds()
 
-    # Track execution
-    _job_executions[job_id] = {
+    # Track execution with history
+    record: dict[str, Any] = {
         "start_time": start_time.isoformat(),
         "end_time": end_time.isoformat(),
         "duration_seconds": duration,
         "status": status,
         "records_collected": len(all_data),
     }
+    if errors:
+        record["errors"] = errors
+
+    _add_execution_record(job_id, record)
 
     logger.info(
         f"Observation collection complete: {len(all_data)} records in {duration:.2f}s "
@@ -239,10 +287,10 @@ async def collect_all_observations() -> list[ObservationData]:
     return all_data
 
 
-def get_all_job_statuses() -> dict[str, dict[str, Any]]:
-    """Get execution status for all jobs.
+def get_all_job_statuses() -> dict[str, list[dict[str, Any]]]:
+    """Get execution history for all jobs.
 
     Returns:
-        Dict mapping job_id to last execution details.
+        Dict mapping job_id to list of execution records (most recent first).
     """
-    return _job_executions.copy()
+    return {job_id: history.copy() for job_id, history in _job_executions.items()}

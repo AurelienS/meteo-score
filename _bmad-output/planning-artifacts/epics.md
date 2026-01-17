@@ -7,8 +7,8 @@ inputDocuments:
 date: "2026-01-10"
 author: "boss"
 project_name: "meteo-score"
-totalEpics: 4
-totalStories: 28
+totalEpics: 5
+totalStories: 30
 ---
 
 # meteo-score - Epic Breakdown
@@ -3899,3 +3899,102 @@ curl http://localhost/
 - [ ] Lighthouse performance > 90
 - [ ] Manual test: Production build serves correctly
 - [ ] SPA routing works with Nginx try_files
+---
+
+## Epic 5: Admin Dashboard & Collection Monitoring
+
+### Epic Overview
+
+**Goal:** Provide admin-only access to monitor and control the data collection pipeline, including viewing collection history, triggering manual collections, and toggling the automatic scheduler.
+
+**Value:** Enables the admin to monitor system health, debug collection issues, and manually intervene when needed without direct server access.
+
+**Dependencies:** Epics 1-4 complete (scheduler and collection infrastructure exists)
+
+**Authentication:** Basic Auth on /api/admin/* and /admin/* routes
+
+---
+
+### Story 5.1: Backend Admin API with Basic Auth
+
+**As an** admin,
+**I want** protected API endpoints for scheduler control and collection history,
+**So that** only I can access sensitive system information and trigger collections.
+
+#### Acceptance Criteria:
+
+**Given** an unauthenticated request to /api/admin/*
+**When** no Basic Auth header is provided
+**Then** return 401 Unauthorized
+
+**Given** valid Basic Auth credentials
+**When** requesting /api/admin/scheduler/status
+**Then** return current scheduler status, jobs, and recent execution history
+
+**Given** valid Basic Auth credentials
+**When** POST to /api/admin/scheduler/toggle
+**Then** start or stop the scheduler at runtime
+
+**Given** valid Basic Auth credentials
+**When** POST to /api/admin/collect/forecasts or /api/admin/collect/observations
+**Then** trigger immediate collection and return results
+
+**Implementation Notes:**
+- Use FastAPI HTTPBasic dependency
+- Credentials from environment: ADMIN_USERNAME, ADMIN_PASSWORD
+- Extend existing scheduler routes under /api/admin prefix
+- Track execution history (last N executions, not just last one)
+
+**Definition of Done:**
+- [ ] Basic Auth middleware on /api/admin/* routes
+- [ ] GET /api/admin/scheduler/status - extended status with history
+- [ ] GET /api/admin/scheduler/jobs - list scheduled jobs
+- [ ] POST /api/admin/scheduler/toggle - start/stop scheduler
+- [ ] POST /api/admin/collect/forecasts - trigger forecast collection
+- [ ] POST /api/admin/collect/observations - trigger observation collection
+- [ ] Environment variables for credentials
+- [ ] Unit tests for auth and endpoints
+
+---
+
+### Story 5.2: Frontend Admin Dashboard Page
+
+**As an** admin,
+**I want** a web interface to view collection status and control the scheduler,
+**So that** I can monitor and manage the system without using CLI tools.
+
+#### Acceptance Criteria:
+
+**Given** I navigate to /admin
+**When** not authenticated
+**Then** browser shows Basic Auth prompt
+
+**Given** valid credentials
+**When** viewing /admin page
+**Then** I see:
+- Scheduler status (running/stopped)
+- Next scheduled collection times
+- Recent collection history (last 10 executions per job type)
+- Manual trigger buttons
+- Scheduler on/off toggle
+
+**Given** I click "Trigger Forecasts"
+**When** collection runs
+**Then** show loading state, then updated status
+
+**Implementation Notes:**
+- Basic Auth handled by browser natively
+- Use existing Solid.js patterns
+- Fetch from /api/admin/* endpoints
+- Simple, functional UI (no need for fancy design)
+
+**Definition of Done:**
+- [ ] /admin route in Solid.js router
+- [ ] AdminPage component with scheduler status
+- [ ] Collection history table
+- [ ] Manual trigger buttons with loading states
+- [ ] Scheduler toggle switch
+- [ ] Auto-refresh status every 30s
+- [ ] Error handling for failed requests
+- [ ] Nginx config allows /admin route (SPA fallback)
+
