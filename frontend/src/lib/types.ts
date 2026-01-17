@@ -97,6 +97,8 @@ export interface TimeSeriesDataPoint {
   mae: number;
   bias: number;
   sampleSize: number;
+  avgForecast?: number | null;
+  avgObserved?: number | null;
 }
 
 /** Response for time series accuracy data */

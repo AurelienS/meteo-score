@@ -112,6 +112,8 @@ class TimeSeriesDataPoint(BaseModel):
         mae: Mean Absolute Error for the period.
         bias: Average deviation for the period.
         sample_size: Number of data points in the period.
+        avg_forecast: Average forecast value for the period.
+        avg_observed: Average observed value for the period.
     """
 
     model_config = ConfigDict(populate_by_name=True)
@@ -120,6 +122,8 @@ class TimeSeriesDataPoint(BaseModel):
     mae: float
     bias: float
     sample_size: int = Field(..., serialization_alias="sampleSize")
+    avg_forecast: Optional[float] = Field(None, serialization_alias="avgForecast")
+    avg_observed: Optional[float] = Field(None, serialization_alias="avgObserved")
 
 
 class TimeSeriesAccuracyResponse(BaseModel):

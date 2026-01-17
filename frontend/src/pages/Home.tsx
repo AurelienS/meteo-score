@@ -108,7 +108,7 @@ const Home: Component = () => {
         )
       );
 
-      // Transform to chart format
+      // Transform to chart format, including raw forecast/observed values
       const chartData: ModelTimeSeries[] = responses.map((response, index) => ({
         modelId: response.modelId,
         modelName: response.modelName,
@@ -116,6 +116,8 @@ const Home: Component = () => {
         data: response.dataPoints.map(dp => ({
           date: new Date(dp.bucket),
           mae: dp.mae,
+          avgForecast: dp.avgForecast,
+          avgObserved: dp.avgObserved,
         })),
       }));
 

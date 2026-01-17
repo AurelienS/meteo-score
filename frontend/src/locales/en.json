@@ -231,7 +231,9 @@
     "chart": {
       "title": "Accuracy Evolution Over Time",
       "noData": "No time series data available",
-      "ariaLabel": "Line chart showing model accuracy over time"
+      "ariaLabel": "Line chart showing model accuracy over time",
+      "observed": "Observed",
+      "forecast": "Forecast"
     }
   }
 }

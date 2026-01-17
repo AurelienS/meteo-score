@@ -256,12 +256,14 @@ class AnalysisService:
         else:  # monthly
             trunc_func = sql_func.date_trunc('month', Deviation.timestamp)
 
-        # Query aggregated time series data
+        # Query aggregated time series data with raw forecast/observed values
         ts_query = select(
             trunc_func.label("bucket"),
             sql_func.avg(sql_func.abs(Deviation.deviation)).label("mae"),
             sql_func.avg(Deviation.deviation).label("bias"),
             sql_func.count().label("sample_size"),
+            sql_func.avg(Deviation.forecast_value).label("avg_forecast"),
+            sql_func.avg(Deviation.observed_value).label("avg_observed"),
         ).where(
             Deviation.site_id == site_id,
             Deviation.model_id == model_id,
@@ -283,6 +285,8 @@ class AnalysisService:
                 "mae": float(row.mae) if row.mae else 0.0,
                 "bias": float(row.bias) if row.bias else 0.0,
                 "sample_size": int(row.sample_size) if row.sample_size else 0,
+                "avg_forecast": float(row.avg_forecast) if row.avg_forecast else None,
+                "avg_observed": float(row.avg_observed) if row.avg_observed else None,
             }
             for row in rows
         ]
@@ -484,6 +488,8 @@ async def get_accuracy_timeseries(
                 mae=dp["mae"],
                 bias=dp["bias"],
                 sample_size=dp["sample_size"],
+                avg_forecast=dp.get("avg_forecast"),
+                avg_observed=dp.get("avg_observed"),
             )
             for dp in result["data_points"]
         ],

@@ -231,7 +231,9 @@
     "chart": {
       "title": "Évolution de la Précision dans le Temps",
       "noData": "Aucune donnée temporelle disponible",
-      "ariaLabel": "Graphique linéaire montrant la précision des modèles dans le temps"
+      "ariaLabel": "Graphique linéaire montrant la précision des modèles dans le temps",
+      "observed": "Observé",
+      "forecast": "Prévision"
     }
   }
 }

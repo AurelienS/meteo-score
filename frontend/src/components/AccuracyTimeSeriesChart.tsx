@@ -7,6 +7,8 @@ import { useI18n } from '../contexts/I18nContext';
 export interface ChartDataPoint {
   date: Date;
   mae: number;
+  avgForecast?: number | null;
+  avgObserved?: number | null;
 }
 
 /** Model time series data for chart */
@@ -269,21 +271,52 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
         // Escape user-provided data to prevent XSS
         const safeUnit = escapeHtml(props.parameterUnit);
 
+        // Get observed value from first model (all models share same observation)
+        const observedValue = values[0]?.point.avgObserved;
+        const hasRawValues = observedValue != null;
+
+        // Build tooltip HTML
+        let tooltipHtml = `<div class="font-semibold mb-2" style="color: var(--color-text-primary)">${formatTooltipDate(date)}</div>`;
+
+        // Show observed value first if available
+        if (hasRawValues) {
+          tooltipHtml += `<div class="flex items-center gap-2 mb-2 pb-2" style="border-bottom: 1px solid var(--color-border-secondary)">
+            <span style="color: var(--color-text-secondary)">📍 ${t('components.chart.observed')}:</span>
+            <span class="font-bold" style="color: var(--color-text-primary)">${observedValue!.toFixed(1)} ${safeUnit}</span>
+          </div>`;
+        }
+
+        // Show each model's forecast and MAE
+        tooltipHtml += values.map(v => {
+          const safeName = escapeHtml(v.model.modelName);
+          const forecastValue = v.point.avgForecast;
+          const hasForecast = forecastValue != null && hasRawValues;
+
+          if (hasForecast) {
+            // Calculate difference from observed
+            const diff = forecastValue! - observedValue!;
+            const diffStr = diff >= 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1);
+            return `<div class="flex items-center gap-2 mb-1">
+              <span class="w-3 h-0.5 inline-block" style="background-color: ${v.model.color}"></span>
+              <span style="color: ${v.model.color}">${safeName}:</span>
+              <span class="font-medium" style="color: var(--color-text-primary)">${forecastValue!.toFixed(1)} ${safeUnit}</span>
+              <span class="text-xs" style="color: var(--color-text-tertiary)">(${diffStr})</span>
+            </div>`;
+          } else {
+            // Fallback to just showing MAE
+            return `<div class="flex items-center gap-2 mb-1">
+              <span class="w-3 h-0.5 inline-block" style="background-color: ${v.model.color}"></span>
+              <span style="color: ${v.model.color}">${safeName}:</span>
+              <span class="font-medium" style="color: var(--color-text-primary)">${v.point.mae.toFixed(1)} ${safeUnit}</span>
+            </div>`;
+          }
+        }).join('');
+
         tooltipRef
           .style('opacity', '1')
           .style('left', `${event.pageX + 15}px`)
           .style('top', `${event.pageY - 10}px`)
-          .html(`
-            <div class="font-semibold mb-1" style="color: var(--color-text-primary)">${formatTooltipDate(date)}</div>
-            ${values.map(v => {
-              const safeName = escapeHtml(v.model.modelName);
-              return `<div class="flex items-center gap-2">
-                <span class="w-3 h-0.5 inline-block" style="background-color: ${v.model.color}"></span>
-                <span style="color: ${v.model.color}">${safeName}:</span>
-                <span class="font-medium" style="color: var(--color-text-primary)">${v.point.mae.toFixed(1)} ${safeUnit}</span>
-              </div>`;
-            }).join('')}
-          `);
+          .html(tooltipHtml);
       })
       .on('mouseout', () => {
         tooltipRef?.style('opacity', '0');
