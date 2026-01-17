@@ -6,6 +6,7 @@ Tests verify:
 - Scheduler status endpoint returns expected structure
 - Scheduler toggle endpoint starts/stops scheduler
 - Manual collection endpoints trigger jobs
+- Stats and data preview endpoints
 """
 
 import base64
@@ -15,7 +16,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from httpx import AsyncClient
 
-from scheduler.jobs import _job_executions, get_execution_history
 from scheduler.scheduler import get_scheduler, reset_scheduler
 
 
@@ -79,7 +79,6 @@ class TestBasicAuthMiddleware:
         """Test that credentials are read from environment variables."""
         with patch.dict(os.environ, {"ADMIN_USERNAME": "testuser", "ADMIN_PASSWORD": "testpass"}):
             # Clear the cached credentials by importing fresh
-            from api.dependencies import auth
 
             # Test with old credentials (should fail)
             response = await test_client.get(
@@ -151,19 +150,25 @@ class TestSchedulerStatusEndpoint:
 
     @pytest.mark.asyncio
     async def test_execution_record_structure(self, test_client: AsyncClient):
-        """Test execution record has expected fields."""
-        # Add a mock execution record
-        _job_executions["collect_forecasts"] = [
+        """Test execution record has expected fields when history exists."""
+        # Mock the execution history to return test data
+        mock_history = [
             {
                 "start_time": "2026-01-17T10:00:00Z",
                 "end_time": "2026-01-17T10:01:00Z",
                 "duration_seconds": 60.0,
                 "status": "success",
                 "records_collected": 100,
+                "records_persisted": 95,
+                "errors": None,
             }
         ]
 
-        try:
+        with patch(
+            "api.routes.admin.get_execution_history_async",
+            new_callable=AsyncMock,
+            return_value=mock_history,
+        ):
             response = await test_client.get(
                 "/api/admin/scheduler/status",
                 headers=get_auth_header(),
@@ -179,9 +184,7 @@ class TestSchedulerStatusEndpoint:
             assert "durationSeconds" in record
             assert "status" in record
             assert "recordsCollected" in record
-        finally:
-            # Clean up
-            _job_executions.clear()
+            assert "recordsPersisted" in record
 
 
 class TestSchedulerJobsEndpoint:
@@ -327,15 +330,20 @@ class TestManualCollectionEndpoints:
         assert "durationSeconds" in data
 
     @pytest.mark.asyncio
-    async def test_forecast_collection_tracks_history(self, test_client: AsyncClient):
-        """Test that forecast collection adds execution record to history."""
-        # Clear existing history
-        _job_executions.clear()
+    async def test_forecast_collection_returns_persisted_count(self, test_client: AsyncClient):
+        """Test that forecast collection returns both collected and persisted counts."""
+        mock_result = {
+            "status": "success",
+            "records_collected": 100,
+            "records_persisted": 95,
+            "duration_seconds": 30.5,
+            "errors": None,
+        }
 
         with patch(
             "api.routes.admin.collect_all_forecasts",
             new_callable=AsyncMock,
-            return_value=[],
+            return_value=mock_result,
         ):
             response = await test_client.post(
                 "/api/admin/collect/forecasts",
@@ -343,60 +351,104 @@ class TestManualCollectionEndpoints:
             )
 
         assert response.status_code == 200
+        data = response.json()
+        assert data["recordsCollected"] == 100
+        assert data["recordsPersisted"] == 95
 
 
-class TestExecutionHistory:
-    """Tests for execution history tracking."""
+class TestStatsEndpoint:
+    """Tests for GET /api/admin/stats endpoint."""
 
-    def test_get_execution_history_empty(self):
-        """Test get_execution_history returns empty list for unknown job."""
-        _job_executions.clear()
-        history = get_execution_history("unknown_job")
-        assert history == []
+    @pytest.mark.asyncio
+    async def test_stats_returns_counts(self, test_client: AsyncClient):
+        """Test that stats endpoint returns all counts."""
+        mock_stats = {
+            "total_forecasts": 1234,
+            "total_observations": 567,
+            "total_deviations": 890,
+            "total_pairs": 123,
+            "total_sites": 1,
+        }
 
-    def test_get_execution_history_returns_records(self):
-        """Test get_execution_history returns stored records."""
-        _job_executions.clear()
-        _job_executions["test_job"] = [
-            {"id": 1},
-            {"id": 2},
-            {"id": 3},
-        ]
+        with patch(
+            "api.routes.admin.get_data_stats",
+            new_callable=AsyncMock,
+            return_value=mock_stats,
+        ):
+            response = await test_client.get(
+                "/api/admin/stats",
+                headers=get_auth_header(),
+            )
 
-        history = get_execution_history("test_job")
-        assert len(history) == 3
-        assert history[0]["id"] == 1
+        assert response.status_code == 200
+        data = response.json()
+        assert data["totalForecasts"] == 1234
+        assert data["totalObservations"] == 567
+        assert data["totalDeviations"] == 890
+        assert data["totalPairs"] == 123
+        assert data["totalSites"] == 1
 
-        # Clean up
-        _job_executions.clear()
+    @pytest.mark.asyncio
+    async def test_stats_requires_auth(self, test_client: AsyncClient):
+        """Test that stats endpoint requires authentication."""
+        response = await test_client.get("/api/admin/stats")
+        assert response.status_code == 401
 
-    def test_get_execution_history_respects_limit(self):
-        """Test get_execution_history respects limit parameter."""
-        _job_executions.clear()
-        _job_executions["test_job"] = [
-            {"id": i} for i in range(10)
-        ]
 
-        history = get_execution_history("test_job", limit=5)
-        assert len(history) == 5
+class TestDataPreviewEndpoint:
+    """Tests for GET /api/admin/data-preview endpoint."""
 
-        # Clean up
-        _job_executions.clear()
+    @pytest.mark.asyncio
+    async def test_preview_returns_data_structure(self, test_client: AsyncClient):
+        """Test that preview endpoint returns expected structure."""
+        mock_preview = {
+            "forecasts": {
+                "AROME": [
+                    {
+                        "id": 1,
+                        "site": "Passy",
+                        "parameter": "Wind Speed",
+                        "valid_time": "2026-01-17T12:00:00Z",
+                        "value": 15.5,
+                        "created_at": "2026-01-17T10:00:00Z",
+                    }
+                ],
+                "Meteo-Parapente": [],
+            },
+            "observations": {
+                "ROMMA": [
+                    {
+                        "id": 1,
+                        "site": "Passy",
+                        "parameter": "Wind Speed",
+                        "observation_time": "2026-01-17T12:00:00Z",
+                        "value": 12.3,
+                        "created_at": "2026-01-17T12:05:00Z",
+                    }
+                ],
+                "FFVL": [],
+            },
+        }
 
-    def test_execution_history_max_size(self):
-        """Test that execution history is capped at max size."""
-        from scheduler.jobs import _add_execution_record, _MAX_EXECUTION_HISTORY
+        with patch(
+            "api.routes.admin.get_recent_data_preview",
+            new_callable=AsyncMock,
+            return_value=mock_preview,
+        ):
+            response = await test_client.get(
+                "/api/admin/data-preview",
+                headers=get_auth_header(),
+            )
 
-        _job_executions.clear()
+        assert response.status_code == 200
+        data = response.json()
+        assert "forecasts" in data
+        assert "observations" in data
+        assert "AROME" in data["forecasts"]
+        assert "ROMMA" in data["observations"]
 
-        # Add more records than the max
-        for i in range(15):
-            _add_execution_record("test_job", {"id": i})
-
-        history = get_execution_history("test_job")
-        assert len(history) == _MAX_EXECUTION_HISTORY
-        # Most recent should be first
-        assert history[0]["id"] == 14
-
-        # Clean up
-        _job_executions.clear()
+    @pytest.mark.asyncio
+    async def test_preview_requires_auth(self, test_client: AsyncClient):
+        """Test that preview endpoint requires authentication."""
+        response = await test_client.get("/api/admin/data-preview")
+        assert response.status_code == 401

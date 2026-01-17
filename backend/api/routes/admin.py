@@ -4,6 +4,7 @@ This module provides protected admin endpoints for:
 - Viewing scheduler status and execution history
 - Toggling scheduler on/off at runtime
 - Triggering manual data collection
+- Viewing data stats and preview
 
 All endpoints require HTTP Basic Auth.
 
@@ -13,11 +14,12 @@ Endpoints:
     POST /api/admin/scheduler/toggle - Start/stop scheduler
     POST /api/admin/collect/forecasts - Trigger manual forecast collection
     POST /api/admin/collect/observations - Trigger manual observation collection
+    GET /api/admin/stats - Get total data counts
+    GET /api/admin/data-preview - Get preview of recent collected data
 """
 
 import logging
-from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +30,10 @@ from api.dependencies.auth import verify_admin
 from scheduler.jobs import (
     collect_all_forecasts,
     collect_all_observations,
-    get_execution_history,
+    get_execution_history_async,
 )
 from scheduler.scheduler import get_scheduler, start_scheduler, stop_scheduler
+from services.storage_service import get_data_stats, get_recent_data_preview
 
 
 # Response schemas
@@ -44,6 +47,7 @@ class ExecutionRecord(BaseModel):
     duration_seconds: float = Field(alias="durationSeconds")
     status: str
     records_collected: int = Field(alias="recordsCollected")
+    records_persisted: int = Field(0, alias="recordsPersisted")
     errors: Optional[list[str]] = None
 
 
@@ -88,8 +92,28 @@ class CollectionResponse(BaseModel):
 
     status: str
     records_collected: int = Field(alias="recordsCollected")
+    records_persisted: int = Field(0, alias="recordsPersisted")
     duration_seconds: float = Field(alias="durationSeconds")
     errors: Optional[list[str]] = None
+
+
+class DataStatsResponse(BaseModel):
+    """Response schema for data statistics endpoint."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    total_forecasts: int = Field(alias="totalForecasts")
+    total_observations: int = Field(alias="totalObservations")
+    total_deviations: int = Field(alias="totalDeviations")
+    total_pairs: int = Field(alias="totalPairs")
+    total_sites: int = Field(alias="totalSites")
+
+
+class DataPreviewResponse(BaseModel):
+    """Response schema for data preview endpoint."""
+
+    forecasts: dict[str, list[dict[str, Any]]]
+    observations: dict[str, list[dict[str, Any]]]
 
 
 # Create admin router with auth dependency applied to all routes
@@ -109,8 +133,8 @@ async def get_admin_scheduler_status() -> AdminSchedulerStatusResponse:
     """
     scheduler = get_scheduler()
 
-    forecast_history = get_execution_history("collect_forecasts", limit=10)
-    observation_history = get_execution_history("collect_observations", limit=10)
+    forecast_history = await get_execution_history_async("collect_forecasts", limit=10)
+    observation_history = await get_execution_history_async("collect_observations", limit=10)
 
     return AdminSchedulerStatusResponse(
         running=scheduler.running,
@@ -178,38 +202,24 @@ async def trigger_forecast_collection() -> CollectionResponse:
     Returns:
         CollectionResponse with collection results.
     """
-    start_time = datetime.now(timezone.utc)
-
     try:
-        data = await collect_all_forecasts()
-        status = "success"
-        errors = None
+        result = await collect_all_forecasts()
+        return CollectionResponse(
+            status=result.get("status", "success"),
+            records_collected=result.get("records_collected", 0),
+            records_persisted=result.get("records_persisted", 0),
+            duration_seconds=result.get("duration_seconds", 0),
+            errors=result.get("errors"),
+        )
     except Exception as e:
         logger.exception("Manual forecast collection failed")
-        data = []
-        status = "failed"
-        errors = [str(e)]
-
-    end_time = datetime.now(timezone.utc)
-    duration = (end_time - start_time).total_seconds()
-
-    # Get the latest execution record for accurate status
-    history = get_execution_history("collect_forecasts", limit=1)
-    if history:
-        latest = history[0]
         return CollectionResponse(
-            status=latest.get("status", status),
-            records_collected=latest.get("records_collected", len(data)),
-            duration_seconds=latest.get("duration_seconds", duration),
-            errors=latest.get("errors"),
+            status="failed",
+            records_collected=0,
+            records_persisted=0,
+            duration_seconds=0,
+            errors=[str(e)],
         )
-
-    return CollectionResponse(
-        status=status,
-        records_collected=len(data),
-        duration_seconds=duration,
-        errors=errors,
-    )
 
 
 @router.post("/collect/observations", response_model=CollectionResponse)
@@ -221,35 +231,54 @@ async def trigger_observation_collection() -> CollectionResponse:
     Returns:
         CollectionResponse with collection results.
     """
-    start_time = datetime.now(timezone.utc)
-
     try:
-        data = await collect_all_observations()
-        status = "success"
-        errors = None
+        result = await collect_all_observations()
+        return CollectionResponse(
+            status=result.get("status", "success"),
+            records_collected=result.get("records_collected", 0),
+            records_persisted=result.get("records_persisted", 0),
+            duration_seconds=result.get("duration_seconds", 0),
+            errors=result.get("errors"),
+        )
     except Exception as e:
         logger.exception("Manual observation collection failed")
-        data = []
-        status = "failed"
-        errors = [str(e)]
-
-    end_time = datetime.now(timezone.utc)
-    duration = (end_time - start_time).total_seconds()
-
-    # Get the latest execution record for accurate status
-    history = get_execution_history("collect_observations", limit=1)
-    if history:
-        latest = history[0]
         return CollectionResponse(
-            status=latest.get("status", status),
-            records_collected=latest.get("records_collected", len(data)),
-            duration_seconds=latest.get("duration_seconds", duration),
-            errors=latest.get("errors"),
+            status="failed",
+            records_collected=0,
+            records_persisted=0,
+            duration_seconds=0,
+            errors=[str(e)],
         )
 
-    return CollectionResponse(
-        status=status,
-        records_collected=len(data),
-        duration_seconds=duration,
-        errors=errors,
+
+@router.get("/stats", response_model=DataStatsResponse)
+async def get_admin_stats() -> DataStatsResponse:
+    """Get total data statistics.
+
+    Returns:
+        DataStatsResponse with total counts for all data types.
+    """
+    stats = await get_data_stats()
+    return DataStatsResponse(
+        total_forecasts=stats.get("total_forecasts", 0),
+        total_observations=stats.get("total_observations", 0),
+        total_deviations=stats.get("total_deviations", 0),
+        total_pairs=stats.get("total_pairs", 0),
+        total_sites=stats.get("total_sites", 0),
+    )
+
+
+@router.get("/data-preview", response_model=DataPreviewResponse)
+async def get_admin_data_preview() -> DataPreviewResponse:
+    """Get preview of recently collected data.
+
+    Returns last 5 records per source for quick verification.
+
+    Returns:
+        DataPreviewResponse with recent forecasts and observations grouped by source.
+    """
+    preview = await get_recent_data_preview(limit=5)
+    return DataPreviewResponse(
+        forecasts=preview.get("forecasts", {}),
+        observations=preview.get("observations", {}),
     )

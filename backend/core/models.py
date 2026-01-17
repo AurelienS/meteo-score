@@ -16,12 +16,12 @@ Tables:
 
 from datetime import datetime
 from decimal import Decimal
-
 from typing import Optional
 
 from sqlalchemy import (
     DECIMAL,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -29,6 +29,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -44,12 +45,21 @@ class Site(Base):
     Represents a geographic location where weather data is collected.
     For example: Passy Plaine Joux paragliding site.
 
+    Beacon Configuration:
+    - Each site can have primary and backup beacons from ROMMA and FFVL networks
+    - During collection, primary beacon is tried first; if it fails, backup is used
+    - At least one beacon (from either network) should be configured
+
     Attributes:
         id: Primary key, auto-incremented.
         name: Human-readable site name.
         latitude: Geographic latitude (decimal degrees).
         longitude: Geographic longitude (decimal degrees).
         altitude: Elevation in meters above sea level.
+        romma_beacon_id: Primary ROMMA station ID for observation collection.
+        romma_beacon_id_backup: Backup ROMMA station ID (used if primary fails).
+        ffvl_beacon_id: Primary FFVL beacon ID for observation collection.
+        ffvl_beacon_id_backup: Backup FFVL beacon ID (used if primary fails).
         created_at: Timestamp when record was created.
         deviations: Relationship to deviation records for this site.
     """
@@ -61,6 +71,10 @@ class Site(Base):
     latitude: Mapped[Decimal] = mapped_column(DECIMAL(9, 6), nullable=False)
     longitude: Mapped[Decimal] = mapped_column(DECIMAL(9, 6), nullable=False)
     altitude: Mapped[int] = mapped_column(Integer, nullable=False)
+    romma_beacon_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    romma_beacon_id_backup: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    ffvl_beacon_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    ffvl_beacon_id_backup: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -569,4 +583,59 @@ class AccuracyMetric(Base):
             f"<AccuracyMetric(id={self.id}, model={self.model_id}, "
             f"site={self.site_id}, param={self.parameter_id}, "
             f"horizon={self.horizon}h, mae={self.mae}, bias={self.bias})>"
+        )
+
+
+class ExecutionLog(Base):
+    """Execution log for scheduled jobs.
+
+    Stores execution history for collection jobs to persist across restarts.
+    Tracks start/end times, status, record counts, and any errors.
+
+    Attributes:
+        id: Primary key, auto-incremented.
+        job_id: Job identifier (e.g., "collect_forecasts", "collect_observations").
+        start_time: When the job started executing.
+        end_time: When the job finished.
+        duration_seconds: Execution duration in seconds.
+        status: Job status ("success", "partial", "failed").
+        records_collected: Number of records returned by collectors.
+        records_persisted: Number of records actually saved to database.
+        errors: Optional JSON array of error messages.
+        created_at: Timestamp when log was created.
+    """
+
+    __tablename__ = "execution_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    job_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    start_time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
+    end_time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
+    duration_seconds: Mapped[float] = mapped_column(Float, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    records_collected: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    records_persisted: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    errors: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    __table_args__ = (
+        Index("idx_execution_logs_job_id", "job_id"),
+        Index("idx_execution_logs_start_time", start_time.desc()),
+    )
+
+    def __repr__(self) -> str:
+        """Return string representation of ExecutionLog."""
+        return (
+            f"<ExecutionLog(id={self.id}, job={self.job_id}, "
+            f"status={self.status}, collected={self.records_collected})>"
         )

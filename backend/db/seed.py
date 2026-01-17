@@ -27,7 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 # Add parent directory to path for imports when running as module
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.models import Base, Model, Parameter, Site
+from core.models import Model, Parameter, Site
 
 
 def get_database_url() -> str:
@@ -44,12 +44,20 @@ def get_database_url() -> str:
 
 
 # Seed data definitions
+# Beacon IDs:
+# - ROMMA: https://www.romma.fr/station_24.php?id=XX
+# - FFVL: https://www.balisemeteo.com/balise.php?idBalise=XX
 SITES = [
     {
         "name": "Passy Plaine Joux",
         "latitude": Decimal("45.916700"),
         "longitude": Decimal("6.700000"),
         "altitude": 1360,
+        # Observation beacons (primary and optional backup)
+        "romma_beacon_id": 21,  # Primary ROMMA station near Chamonix
+        "romma_beacon_id_backup": None,  # No backup configured yet
+        "ffvl_beacon_id": 67,  # Primary FFVL balise (Le Semnoz placeholder)
+        "ffvl_beacon_id_backup": None,  # No backup configured yet
     },
 ]
 
