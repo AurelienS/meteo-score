@@ -215,8 +215,44 @@ export async function fetchAccuracyTimeSeries(
 // =============================================================================
 
 /**
+ * Get stored admin credentials from sessionStorage.
+ */
+function getStoredAdminCredentials(): string | null {
+  if (typeof window !== 'undefined') {
+    return sessionStorage.getItem('adminCredentials');
+  }
+  return null;
+}
+
+/**
+ * Store admin credentials in sessionStorage.
+ */
+export function setAdminCredentials(username: string, password: string): void {
+  if (typeof window !== 'undefined') {
+    const encoded = btoa(`${username}:${password}`);
+    sessionStorage.setItem('adminCredentials', encoded);
+  }
+}
+
+/**
+ * Clear admin credentials from sessionStorage.
+ */
+export function clearAdminCredentials(): void {
+  if (typeof window !== 'undefined') {
+    sessionStorage.removeItem('adminCredentials');
+  }
+}
+
+/**
+ * Check if admin credentials are stored.
+ */
+export function hasAdminCredentials(): boolean {
+  return getStoredAdminCredentials() !== null;
+}
+
+/**
  * Fetch with Basic Auth support and POST method.
- * Browser will prompt for credentials on 401 response.
+ * Uses credentials from sessionStorage if available.
  */
 async function fetchAdminApi<T>(
   endpoint: string,
@@ -226,11 +262,17 @@ async function fetchAdminApi<T>(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
 
+  const headers: HeadersInit = {};
+  const credentials = getStoredAdminCredentials();
+  if (credentials) {
+    headers['Authorization'] = `Basic ${credentials}`;
+  }
+
   try {
     const response = await fetch(url, {
       method,
       signal: controller.signal,
-      credentials: 'include', // Include credentials for Basic Auth
+      headers,
     });
     clearTimeout(timeoutId);
 

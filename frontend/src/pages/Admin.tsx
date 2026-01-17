@@ -26,6 +26,9 @@ import {
   ApiRequestError,
   NetworkError,
   TimeoutError,
+  setAdminCredentials,
+  hasAdminCredentials,
+  clearAdminCredentials,
 } from '../lib/api';
 
 /** Auto-refresh interval in milliseconds (30 seconds) */
@@ -221,9 +224,88 @@ function LoadingSpinner(): JSX.Element {
 }
 
 /**
+ * Login form component for admin authentication.
+ */
+function LoginForm(props: {
+  onLogin: (username: string, password: string) => void;
+  error: string | null;
+  isLoading: boolean;
+}): JSX.Element {
+  const [username, setUsername] = createSignal('');
+  const [password, setPassword] = createSignal('');
+
+  function handleSubmit(e: Event): void {
+    e.preventDefault();
+    props.onLogin(username(), password());
+  }
+
+  return (
+    <div class="min-h-screen flex items-center justify-center bg-gray-50">
+      <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6 text-center">Admin Login</h1>
+
+        <Show when={props.error}>
+          <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+            {props.error}
+          </div>
+        </Show>
+
+        <form onSubmit={handleSubmit}>
+          <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-medium mb-2" for="username">
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              value={username()}
+              onInput={(e) => setUsername(e.currentTarget.value)}
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+              autocomplete="username"
+            />
+          </div>
+
+          <div class="mb-6">
+            <label class="block text-gray-700 text-sm font-medium mb-2" for="password">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password()}
+              onInput={(e) => setPassword(e.currentTarget.value)}
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+              autocomplete="current-password"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={props.isLoading}
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            <Show when={props.isLoading}>
+              <LoadingSpinner />
+            </Show>
+            {props.isLoading ? 'Logging in...' : 'Login'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Admin Dashboard page.
  */
 export default function Admin(): JSX.Element {
+  // Auth state
+  const [isAuthenticated, setIsAuthenticated] = createSignal(hasAdminCredentials());
+  const [loginError, setLoginError] = createSignal<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = createSignal(false);
+
   // State signals
   const [status, setStatus] = createSignal<AdminSchedulerStatusResponse | null>(null);
   const [jobs, setJobs] = createSignal<SchedulerJobsResponse | null>(null);
@@ -235,6 +317,42 @@ export default function Admin(): JSX.Element {
   const [lastRefresh, setLastRefresh] = createSignal<Date | null>(null);
   const [actionMessage, setActionMessage] = createSignal<string | null>(null);
   const [confirmStopScheduler, setConfirmStopScheduler] = createSignal(false);
+
+  /**
+   * Handle login attempt.
+   */
+  async function handleLogin(username: string, password: string): Promise<void> {
+    setIsLoggingIn(true);
+    setLoginError(null);
+
+    // Store credentials and try to fetch data
+    setAdminCredentials(username, password);
+
+    try {
+      await fetchAdminSchedulerStatus();
+      setIsAuthenticated(true);
+      fetchData();
+    } catch (err) {
+      clearAdminCredentials();
+      if (err instanceof ApiRequestError && err.statusCode === 401) {
+        setLoginError('Invalid username or password');
+      } else {
+        setLoginError('Login failed. Please try again.');
+      }
+    } finally {
+      setIsLoggingIn(false);
+    }
+  }
+
+  /**
+   * Handle logout.
+   */
+  function handleLogout(): void {
+    clearAdminCredentials();
+    setIsAuthenticated(false);
+    setStatus(null);
+    setJobs(null);
+  }
 
   /**
    * Fetch all admin data.
@@ -252,7 +370,9 @@ export default function Admin(): JSX.Element {
     } catch (err) {
       if (err instanceof ApiRequestError) {
         if (err.statusCode === 401) {
-          setError('Authentication failed. Please refresh the page to try again.');
+          // Session expired or invalid credentials - log out
+          handleLogout();
+          return;
         } else if (err.statusCode === 429) {
           setError('Too many requests. Please wait a moment and try again.');
         } else {
@@ -359,12 +479,16 @@ export default function Admin(): JSX.Element {
   let refreshInterval: number | undefined;
 
   onMount(() => {
-    // Fetch initial data
-    fetchData();
+    // Only fetch if already authenticated
+    if (isAuthenticated()) {
+      fetchData();
+    } else {
+      setIsLoadingStatus(false);
+    }
 
     // Setup auto-refresh interval
     refreshInterval = window.setInterval(() => {
-      if (!isTogglingScheduler() && !isCollectingForecasts() && !isCollectingObservations()) {
+      if (isAuthenticated() && !isTogglingScheduler() && !isCollectingForecasts() && !isCollectingObservations()) {
         fetchData();
       }
     }, AUTO_REFRESH_INTERVAL);
@@ -385,6 +509,17 @@ export default function Admin(): JSX.Element {
     }
   });
 
+  // Show login form if not authenticated
+  if (!isAuthenticated()) {
+    return (
+      <LoginForm
+        onLogin={handleLogin}
+        error={loginError()}
+        isLoading={isLoggingIn()}
+      />
+    );
+  }
+
   return (
     <div class="container mx-auto px-4 py-8 max-w-6xl">
       {/* Header */}
@@ -398,13 +533,21 @@ export default function Admin(): JSX.Element {
             </p>
           </Show>
         </div>
-        <button
-          onClick={() => fetchData()}
-          disabled={isLoadingStatus()}
-          class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50"
-        >
-          Refresh
-        </button>
+        <div class="flex gap-2">
+          <button
+            onClick={() => fetchData()}
+            disabled={isLoadingStatus()}
+            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50"
+          >
+            Refresh
+          </button>
+          <button
+            onClick={handleLogout}
+            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Error Alert */}
