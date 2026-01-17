@@ -36,7 +36,7 @@ const Navigation: Component = () => {
               class="hover:text-blue-200 transition-colors font-medium"
               activeClass="text-blue-200 underline underline-offset-4"
             >
-              About
+              Methodology
             </A>
           </div>
 
@@ -81,7 +81,7 @@ const Navigation: Component = () => {
                 activeClass="bg-blue-700"
                 onClick={() => setIsMenuOpen(false)}
               >
-                About
+                Methodology
               </A>
             </div>
           </div>
