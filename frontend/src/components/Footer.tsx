@@ -1,4 +1,5 @@
 import type { Component } from 'solid-js';
+import { useI18n } from '../contexts/I18nContext';
 
 /** GitHub repository URL for the project */
 const GITHUB_URL = 'https://github.com/AurelienS/meteo-score';
@@ -10,8 +11,10 @@ const CURRENT_YEAR = new Date().getFullYear();
  * Footer component.
  * Displays copyright information and links to project resources.
  * Supports dark mode via CSS variables.
+ * Supports i18n via I18nContext.
  */
 const Footer: Component = () => {
+  const { t } = useI18n();
 
   return (
     <footer
@@ -27,7 +30,7 @@ const Footer: Component = () => {
             class="text-sm text-center md:text-left"
             style={{ color: "var(--color-text-tertiary)" }}
           >
-            MétéoScore - Open Source Weather Forecast Accuracy Platform
+            {t('brand')} - {t('footer.tagline')}
           </p>
           <div class="flex items-center gap-4">
             <a
@@ -36,9 +39,9 @@ const Footer: Component = () => {
               rel="noopener noreferrer"
               class="text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               style={{ color: "var(--color-text-tertiary)" }}
-              aria-label="View MétéoScore source code on GitHub"
+              aria-label={`${t('footer.viewOnGithub')} - ${t('brand')}`}
             >
-              View on GitHub
+              {t('footer.viewOnGithub')}
             </a>
             <span class="text-sm" style={{ color: "var(--color-text-muted)" }}>
               © {CURRENT_YEAR}

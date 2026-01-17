@@ -1,4 +1,5 @@
 import type { Component } from 'solid-js';
+import { useI18n } from '../contexts/I18nContext';
 
 /**
  * About/Methodology page component.
@@ -12,64 +13,62 @@ import type { Component } from 'solid-js';
  * - Open source information
  */
 const About: Component = () => {
+  const { t } = useI18n();
+
   return (
     <div class="container mx-auto px-4 py-8">
       <div class="max-w-4xl mx-auto">
         {/* Page Title */}
         <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-          Methodology
+          {t('methodology.title')}
         </h1>
 
         {/* How MétéoScore Works */}
         <section class="mb-8">
           <h2 class="text-2xl font-semibold text-gray-800 mb-4">
-            How MétéoScore Works
+            {t('methodology.howItWorks')}
           </h2>
           <p class="text-gray-600 leading-relaxed mb-4">
-            MétéoScore objectively evaluates weather forecast model accuracy by comparing
-            forecast predictions against real-world observations from weather beacons and stations.
-            This helps paragliding pilots and outdoor enthusiasts understand which forecasts
-            are most reliable for their specific flying sites.
+            {t('methodology.howItWorksDesc')}
           </p>
         </section>
 
         {/* Metrics Explained */}
         <section class="mb-8">
           <h2 class="text-2xl font-semibold text-gray-800 mt-8 mb-4">
-            Metrics Explained
+            {t('methodology.metricsExplained')}
           </h2>
 
           {/* MAE */}
           <h3 class="text-xl font-medium text-gray-700 mt-6 mb-3">
-            Mean Absolute Error (MAE)
+            {t('methodology.mae')}
           </h3>
           <div class="bg-gray-100 p-4 rounded-lg my-4 font-mono text-sm text-gray-800">
-            MAE = Average(|Forecast - Observation|)
+            {t('methodology.maeFormula')}
           </div>
           <p class="text-gray-600 leading-relaxed mb-4">
-            MAE measures the average magnitude of forecast errors. Lower is better.
-            For example, an MAE of 4.2 km/h for wind speed means the model is typically
-            off by approximately 4.2 km/h in either direction.
+            {t('methodology.maeDesc')}
           </p>
 
           {/* Bias */}
           <h3 class="text-xl font-medium text-gray-700 mt-6 mb-3">
-            Bias (Systematic Error)
+            {t('methodology.biasTitle')}
           </h3>
           <div class="bg-gray-100 p-4 rounded-lg my-4 font-mono text-sm text-gray-800">
-            Bias = Average(Forecast - Observation)
+            {t('methodology.biasFormula')}
           </div>
           <ul class="list-disc list-outside text-gray-600 space-y-2 mb-4 ml-6">
             <li>
-              <strong>Positive bias:</strong> Model systematically overestimates
-              (e.g., predicts stronger wind than actually observed)
+              <strong>{t('methodology.positiveBias')}</strong>{' '}
+              {t('methodology.positiveBiasDesc')}
             </li>
             <li>
-              <strong>Negative bias:</strong> Model systematically underestimates
-              (e.g., predicts weaker wind than actually observed)
+              <strong>{t('methodology.negativeBias')}</strong>{' '}
+              {t('methodology.negativeBiasDesc')}
             </li>
             <li>
-              <strong>Zero bias:</strong> No systematic tendency - errors are random
+              <strong>{t('methodology.zeroBias')}</strong>{' '}
+              {t('methodology.zeroBiasDesc')}
             </li>
           </ul>
         </section>
@@ -77,34 +76,30 @@ const About: Component = () => {
         {/* Data Sources */}
         <section class="mb-8">
           <h2 class="text-2xl font-semibold text-gray-800 mt-8 mb-4">
-            Data Sources
+            {t('methodology.dataSources')}
           </h2>
 
           <h3 class="text-xl font-medium text-gray-700 mt-6 mb-3">
-            Forecast Models
+            {t('methodology.forecastModels')}
           </h3>
           <ul class="list-disc list-outside text-gray-600 space-y-2 mb-4 ml-6">
             <li>
-              <strong>AROME</strong> - Météo-France high-resolution numerical weather model
-              (2.5km grid resolution, updated 4x daily)
+              <strong>AROME</strong> - {t('methodology.aromeDesc').replace('AROME - ', '')}
             </li>
             <li>
-              <strong>Meteo-Parapente</strong> - Specialized forecast service optimized
-              for paragliding conditions
+              <strong>Meteo-Parapente</strong> - {t('methodology.meteoParapenteDesc').replace('Meteo-Parapente - ', '')}
             </li>
           </ul>
 
           <h3 class="text-xl font-medium text-gray-700 mt-6 mb-3">
-            Observation Networks
+            {t('methodology.observationNetworks')}
           </h3>
           <ul class="list-disc list-outside text-gray-600 space-y-2 mb-4 ml-6">
             <li>
-              <strong>ROMMA</strong> - Network of automated mountain weather beacons
-              providing real-time observations
+              <strong>ROMMA</strong> - {t('methodology.rommaDesc').replace('ROMMA - ', '')}
             </li>
             <li>
-              <strong>FFVL</strong> - French Free Flight Federation weather stations
-              at popular flying sites
+              <strong>FFVL</strong> - {t('methodology.ffvlDesc').replace('FFVL - ', '')}
             </li>
           </ul>
         </section>
@@ -112,38 +107,37 @@ const About: Component = () => {
         {/* Data Collection Process */}
         <section class="mb-8">
           <h2 class="text-2xl font-semibold text-gray-800 mt-8 mb-4">
-            Data Collection Process
+            {t('methodology.dataCollection')}
           </h2>
           <ol class="list-decimal list-outside text-gray-600 space-y-2 mb-4 ml-6">
-            <li>Forecasts are retrieved 4 times daily (00h, 06h, 12h, 18h UTC model runs)</li>
-            <li>Observations are collected 6 times daily from beacon networks</li>
-            <li>Forecasts are matched with observations within a 30-minute window</li>
-            <li>Deviation is calculated: Forecast Value - Observed Value</li>
-            <li>Aggregate metrics (MAE, Bias) are computed from 90+ days of historical deviations</li>
+            <li>{t('methodology.dataCollectionStep1')}</li>
+            <li>{t('methodology.dataCollectionStep2')}</li>
+            <li>{t('methodology.dataCollectionStep3')}</li>
+            <li>{t('methodology.dataCollectionStep4')}</li>
+            <li>{t('methodology.dataCollectionStep5')}</li>
           </ol>
         </section>
 
         {/* Confidence Levels */}
         <section class="mb-8">
           <h2 class="text-2xl font-semibold text-gray-800 mt-8 mb-4">
-            Confidence Levels
+            {t('methodology.confidenceLevels')}
           </h2>
           <p class="text-gray-600 leading-relaxed mb-4">
-            The reliability of our metrics depends on how much historical data is available
-            for each site:
+            {t('methodology.confidenceLevelsDesc')}
           </p>
           <div class="overflow-x-auto">
             <table class="min-w-full border border-gray-200 my-4">
               <thead>
                 <tr class="bg-gray-50">
                   <th class="border border-gray-200 px-4 py-3 text-left font-semibold text-gray-700">
-                    Level
+                    {t('methodology.levelColumn')}
                   </th>
                   <th class="border border-gray-200 px-4 py-3 text-left font-semibold text-gray-700">
-                    Days of Data
+                    {t('methodology.daysColumn')}
                   </th>
                   <th class="border border-gray-200 px-4 py-3 text-left font-semibold text-gray-700">
-                    Interpretation
+                    {t('methodology.interpretationColumn')}
                   </th>
                 </tr>
               </thead>
@@ -151,34 +145,34 @@ const About: Component = () => {
                 <tr>
                   <td class="border border-gray-200 px-4 py-3 text-gray-600">
                     <span class="inline-flex items-center">
-                      <span class="mr-2">&#x2705;</span> Validated
+                      <span class="mr-2">&#x2705;</span> {t('methodology.validated')}
                     </span>
                   </td>
-                  <td class="border border-gray-200 px-4 py-3 text-gray-600">90+ days</td>
+                  <td class="border border-gray-200 px-4 py-3 text-gray-600">{t('methodology.validatedDays')}</td>
                   <td class="border border-gray-200 px-4 py-3 text-gray-600">
-                    Statistically reliable metrics
+                    {t('methodology.validatedDesc')}
                   </td>
                 </tr>
                 <tr class="bg-gray-50">
                   <td class="border border-gray-200 px-4 py-3 text-gray-600">
                     <span class="inline-flex items-center">
-                      <span class="mr-2">&#x1F536;</span> Preliminary
+                      <span class="mr-2">&#x1F536;</span> {t('methodology.preliminary')}
                     </span>
                   </td>
-                  <td class="border border-gray-200 px-4 py-3 text-gray-600">30-89 days</td>
+                  <td class="border border-gray-200 px-4 py-3 text-gray-600">{t('methodology.preliminaryDays')}</td>
                   <td class="border border-gray-200 px-4 py-3 text-gray-600">
-                    Results will stabilize with more data
+                    {t('methodology.preliminaryDesc')}
                   </td>
                 </tr>
                 <tr>
                   <td class="border border-gray-200 px-4 py-3 text-gray-600">
                     <span class="inline-flex items-center">
-                      <span class="mr-2">&#x26A0;&#xFE0F;</span> Insufficient
+                      <span class="mr-2">&#x26A0;&#xFE0F;</span> {t('methodology.insufficient')}
                     </span>
                   </td>
-                  <td class="border border-gray-200 px-4 py-3 text-gray-600">&lt;30 days</td>
+                  <td class="border border-gray-200 px-4 py-3 text-gray-600">{t('methodology.insufficientDays')}</td>
                   <td class="border border-gray-200 px-4 py-3 text-gray-600">
-                    Not enough data for reliable conclusions
+                    {t('methodology.insufficientDesc')}
                   </td>
                 </tr>
               </tbody>
@@ -189,24 +183,24 @@ const About: Component = () => {
         {/* Limitations */}
         <section class="mb-8">
           <h2 class="text-2xl font-semibold text-gray-800 mt-8 mb-4">
-            Limitations
+            {t('methodology.limitations')}
           </h2>
           <ul class="list-disc list-outside text-gray-600 space-y-2 mb-4 ml-6">
             <li>
-              <strong>Past performance:</strong> Metrics reflect historical accuracy and
-              do not guarantee future forecast quality
+              <strong>{t('methodology.limitationPastPerf')}</strong>{' '}
+              {t('methodology.limitationPastPerfDesc')}
             </li>
             <li>
-              <strong>Site-specific:</strong> Results at one location may not apply to
-              nearby sites with different terrain or microclimate
+              <strong>{t('methodology.limitationSiteSpecific')}</strong>{' '}
+              {t('methodology.limitationSiteSpecificDesc')}
             </li>
             <li>
-              <strong>Extreme events:</strong> Rare weather events may not be well-represented
-              in the statistics
+              <strong>{t('methodology.limitationExtremeEvents')}</strong>{' '}
+              {t('methodology.limitationExtremeEventsDesc')}
             </li>
             <li>
-              <strong>Measurement uncertainty:</strong> Observation beacons have their own
-              measurement errors (typically ±0.5 km/h for wind, ±0.3°C for temperature)
+              <strong>{t('methodology.limitationMeasurement')}</strong>{' '}
+              {t('methodology.limitationMeasurementDesc')}
             </li>
           </ul>
         </section>
@@ -214,11 +208,10 @@ const About: Component = () => {
         {/* Transparency & Open Source */}
         <section class="mb-8">
           <h2 class="text-2xl font-semibold text-gray-800 mt-8 mb-4">
-            Transparency & Open Source
+            {t('methodology.transparency')}
           </h2>
           <p class="text-gray-600 leading-relaxed mb-4">
-            MétéoScore is fully open source. All code, methodology, and data processing
-            logic are publicly available for review and verification:
+            {t('methodology.transparencyDesc')}
           </p>
           <ul class="list-disc list-outside text-gray-600 space-y-2 mb-4 ml-6">
             <li>
@@ -228,12 +221,12 @@ const About: Component = () => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                GitHub Repository
+                {t('methodology.githubRepo')}
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
               </a>
-              {' '}- Source code and documentation
+              {' '}- {t('methodology.sourceCodeDesc')}
             </li>
             <li>
               <a
@@ -242,12 +235,12 @@ const About: Component = () => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Technical Documentation
+                {t('methodology.technicalDocs')}
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
               </a>
-              {' '}- Detailed methodology and algorithms
+              {' '}- {t('methodology.detailedMethodology')}
             </li>
           </ul>
         </section>
@@ -255,10 +248,10 @@ const About: Component = () => {
         {/* Questions or Feedback */}
         <section class="mb-8">
           <h2 class="text-2xl font-semibold text-gray-800 mt-8 mb-4">
-            Questions or Feedback?
+            {t('methodology.questions')}
           </h2>
           <p class="text-gray-600 leading-relaxed mb-4">
-            We welcome questions, suggestions, and bug reports. Please open an issue on{' '}
+            {t('methodology.questionsDesc')}{' '}
             <a
               href="https://github.com/AurelienS/meteo-score/issues"
               class="text-primary-500 hover:text-primary-600 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded inline-flex items-center gap-1"
@@ -270,7 +263,7 @@ const About: Component = () => {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
             </a>
-            {' '}or reach out to the maintainers.
+            {' '}{t('methodology.orContactMaintainers')}
           </p>
         </section>
       </div>

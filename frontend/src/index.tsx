@@ -3,6 +3,7 @@ import { render } from 'solid-js/web';
 import './styles/index.css';
 import App from './App';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { I18nProvider } from './contexts/I18nContext';
 
 const root = document.getElementById('root');
 
@@ -14,9 +15,11 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 
 render(
   () => (
-    <ThemeProvider>
-      <App />
-    </ThemeProvider>
+    <I18nProvider>
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
+    </I18nProvider>
   ),
   root!
 );

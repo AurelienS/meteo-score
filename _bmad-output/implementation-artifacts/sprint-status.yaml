@@ -94,7 +94,7 @@ development_status:
   epic-6: in-progress
   6-1-bug-fixes-cleanup: done
   6-2-theming-system-dark-light-mode: done
-  6-3-internationalization-i18n: backlog
+  6-3-internationalization-i18n: done
   6-4-typography-improvements: backlog
   6-5-ui-micro-animations: backlog
   epic-6-retrospective: optional

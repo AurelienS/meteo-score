@@ -11,6 +11,7 @@ import AccuracyTimeSeriesChart, { getModelColor } from '../components/AccuracyTi
 import type { ModelTimeSeries } from '../components/AccuracyTimeSeriesChart';
 import { fetchSites, fetchParameters, fetchSiteAccuracy, fetchAccuracyTimeSeries, NetworkError, TimeoutError } from '../lib/api';
 import type { Site, Parameter, SiteAccuracyResponse, ModelAccuracyMetrics, ConfidenceLevel } from '../lib/types';
+import { useI18n } from '../contexts/I18nContext';
 
 /** Standard forecast horizons for MVP */
 const FORECAST_HORIZONS = [6, 12, 24, 48];
@@ -19,19 +20,16 @@ const FORECAST_HORIZONS = [6, 12, 24, 48];
 const CONFIDENCE_LEVELS_ORDERED: ConfidenceLevel[] = ['insufficient', 'preliminary', 'validated'];
 
 /**
- * Get user-friendly error message based on error type.
+ * Get error type for translation lookup.
  */
-function getErrorMessage(err: unknown): string {
+function getErrorType(err: unknown): 'timeout' | 'network' | 'unexpected' {
   if (err instanceof TimeoutError) {
-    return 'Request timed out. The server may be busy - please try again later.';
+    return 'timeout';
   }
   if (err instanceof NetworkError) {
-    return 'Unable to connect. Please check your internet connection.';
+    return 'network';
   }
-  if (err instanceof Error) {
-    return err.message;
-  }
-  return 'An unexpected error occurred.';
+  return 'unexpected';
 }
 
 /**
@@ -39,6 +37,8 @@ function getErrorMessage(err: unknown): string {
  * Displays site, parameter, and horizon selectors for model comparison.
  */
 const Home: Component = () => {
+  const { t } = useI18n();
+
   // Data state - loaded from API
   const [sites, setSites] = createSignal<Site[]>([]);
   const [parameters, setParameters] = createSignal<Parameter[]>([]);
@@ -78,7 +78,8 @@ const Home: Component = () => {
       const data = await fetchSiteAccuracy(siteId, parameterId, horizon);
       setAccuracyData(data);
     } catch (err) {
-      setAccuracyError(getErrorMessage(err));
+      const errorType = getErrorType(err);
+      setAccuracyError(errorType);
       setAccuracyData(null);
     } finally {
       setIsLoadingAccuracy(false);
@@ -120,7 +121,8 @@ const Home: Component = () => {
 
       setTimeSeriesData(chartData);
     } catch (err) {
-      setTimeSeriesError(getErrorMessage(err));
+      const errorType = getErrorType(err);
+      setTimeSeriesError(errorType);
       setTimeSeriesData([]);
     } finally {
       setIsLoadingTimeSeries(false);
@@ -171,7 +173,8 @@ const Home: Component = () => {
         setSelectedParameterId(parametersData[0].id);
       }
     } catch (err) {
-      setError(getErrorMessage(err));
+      const errorType = getErrorType(err);
+      setError(errorType);
     } finally {
       setIsLoadingSites(false);
       setIsLoadingParameters(false);
@@ -233,27 +236,40 @@ const Home: Component = () => {
     };
   });
 
+  // Helper function to get translated error message
+  const getTranslatedError = (errorType: string | null): string => {
+    if (!errorType) return '';
+    switch (errorType) {
+      case 'timeout':
+        return t('home.requestTimeout');
+      case 'network':
+        return t('home.networkError');
+      default:
+        return t('home.unexpectedError');
+    }
+  };
+
   return (
     <div class="container mx-auto px-4 py-8">
       <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-        MétéoScore
+        {t('brand')}
       </h1>
       <p class="text-sm md:text-base text-gray-600 mb-8">
-        Compare weather forecast accuracy across different models for paragliding sites.
+        {t('home.subtitle')}
       </p>
 
       {/* Error state for initial load */}
       <Show when={error()}>
         <div role="alert" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-          <p class="font-medium">Error loading data</p>
-          <p class="text-sm mb-3">{error()}</p>
+          <p class="font-medium">{t('home.errorLoadingData')}</p>
+          <p class="text-sm mb-3">{getTranslatedError(error())}</p>
           <button
             type="button"
             class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={loadInitialData}
             disabled={isLoadingSelectors()}
           >
-            {isLoadingSelectors() ? 'Retrying...' : 'Retry'}
+            {isLoadingSelectors() ? t('home.retrying') : t('home.retry')}
           </button>
         </div>
       </Show>
@@ -296,15 +312,15 @@ const Home: Component = () => {
         {/* Accuracy error state */}
         <Show when={accuracyError()}>
           <div role="alert" class="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-lg mb-6">
-            <p class="font-medium">Could not load accuracy data</p>
-            <p class="text-sm mb-3">{accuracyError()}</p>
+            <p class="font-medium">{t('home.couldNotLoadAccuracy')}</p>
+            <p class="text-sm mb-3">{getTranslatedError(accuracyError())}</p>
             <button
               type="button"
               class="px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={retryAccuracyLoad}
               disabled={isLoadingAccuracy()}
             >
-              {isLoadingAccuracy() ? 'Retrying...' : 'Retry'}
+              {isLoadingAccuracy() ? t('home.retrying') : t('home.retry')}
             </button>
           </div>
         </Show>
@@ -349,7 +365,7 @@ const Home: Component = () => {
               <Show when={data().models.length > 0}>
                 <div class="mb-6">
                   <h2 class="text-base md:text-lg font-semibold text-gray-900 mb-4">
-                    Bias Characterization
+                    {t('home.biasCharacterization')}
                   </h2>
                   <div class="space-y-4">
                     <For each={data().models}>
@@ -370,15 +386,15 @@ const Home: Component = () => {
               {/* Time series error state */}
               <Show when={timeSeriesError()}>
                 <div role="alert" class="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-lg mb-6">
-                  <p class="font-medium">Could not load time series data</p>
-                  <p class="text-sm mb-3">{timeSeriesError()}</p>
+                  <p class="font-medium">{t('home.couldNotLoadTimeSeries')}</p>
+                  <p class="text-sm mb-3">{getTranslatedError(timeSeriesError())}</p>
                   <button
                     type="button"
                     class="px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={retryTimeSeriesLoad}
                     disabled={isLoadingTimeSeries()}
                   >
-                    {isLoadingTimeSeries() ? 'Retrying...' : 'Retry'}
+                    {isLoadingTimeSeries() ? t('home.retrying') : t('home.retry')}
                   </button>
                 </div>
               </Show>

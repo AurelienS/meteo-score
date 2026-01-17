@@ -30,6 +30,7 @@ import {
   hasAdminCredentials,
   clearAdminCredentials,
 } from '../lib/api';
+import { useI18n } from '../contexts/I18nContext';
 
 /** Auto-refresh interval in milliseconds (30 seconds) */
 const AUTO_REFRESH_INTERVAL = 30000;
@@ -91,6 +92,11 @@ function StatusBadge(props: { status: string }): JSX.Element {
 function ExecutionHistoryTable(props: {
   title: string;
   history: ExecutionRecord[];
+  noHistoryText: string;
+  timeLabel: string;
+  statusLabel: string;
+  recordsLabel: string;
+  durationLabel: string;
 }): JSX.Element {
   return (
     <div class="bg-white rounded-lg shadow p-4">
@@ -98,17 +104,17 @@ function ExecutionHistoryTable(props: {
       <Show
         when={props.history.length > 0}
         fallback={
-          <p class="text-gray-500 text-sm italic">No execution history yet</p>
+          <p class="text-gray-500 text-sm italic">{props.noHistoryText}</p>
         }
       >
         <div class="overflow-x-auto">
           <table class="min-w-full text-sm">
             <thead>
               <tr class="border-b border-gray-200">
-                <th class="text-left py-2 px-2 font-medium text-gray-600">Time</th>
-                <th class="text-left py-2 px-2 font-medium text-gray-600">Status</th>
-                <th class="text-right py-2 px-2 font-medium text-gray-600">Records</th>
-                <th class="text-right py-2 px-2 font-medium text-gray-600">Duration</th>
+                <th class="text-left py-2 px-2 font-medium text-gray-600">{props.timeLabel}</th>
+                <th class="text-left py-2 px-2 font-medium text-gray-600">{props.statusLabel}</th>
+                <th class="text-right py-2 px-2 font-medium text-gray-600">{props.recordsLabel}</th>
+                <th class="text-right py-2 px-2 font-medium text-gray-600">{props.durationLabel}</th>
               </tr>
             </thead>
             <tbody>
@@ -152,23 +158,31 @@ function ExecutionHistoryTable(props: {
 /**
  * Scheduled jobs table component.
  */
-function ScheduledJobsTable(props: { jobs: ScheduledJobInfo[] }): JSX.Element {
+function ScheduledJobsTable(props: {
+  jobs: ScheduledJobInfo[];
+  title: string;
+  noJobsText: string;
+  jobLabel: string;
+  nextRunLabel: string;
+  triggerLabel: string;
+  notScheduledText: string;
+}): JSX.Element {
   return (
     <div class="bg-white rounded-lg shadow p-4">
-      <h3 class="text-lg font-semibold text-gray-800 mb-3">Scheduled Jobs</h3>
+      <h3 class="text-lg font-semibold text-gray-800 mb-3">{props.title}</h3>
       <Show
         when={props.jobs.length > 0}
         fallback={
-          <p class="text-gray-500 text-sm italic">No jobs scheduled</p>
+          <p class="text-gray-500 text-sm italic">{props.noJobsText}</p>
         }
       >
         <div class="overflow-x-auto">
           <table class="min-w-full text-sm">
             <thead>
               <tr class="border-b border-gray-200">
-                <th class="text-left py-2 px-2 font-medium text-gray-600">Job</th>
-                <th class="text-left py-2 px-2 font-medium text-gray-600">Next Run</th>
-                <th class="text-left py-2 px-2 font-medium text-gray-600">Trigger</th>
+                <th class="text-left py-2 px-2 font-medium text-gray-600">{props.jobLabel}</th>
+                <th class="text-left py-2 px-2 font-medium text-gray-600">{props.nextRunLabel}</th>
+                <th class="text-left py-2 px-2 font-medium text-gray-600">{props.triggerLabel}</th>
               </tr>
             </thead>
             <tbody>
@@ -177,7 +191,7 @@ function ScheduledJobsTable(props: { jobs: ScheduledJobInfo[] }): JSX.Element {
                   <tr class="border-b border-gray-100 hover:bg-gray-50">
                     <td class="py-2 px-2 text-gray-700 font-medium">{job.name}</td>
                     <td class="py-2 px-2 text-gray-700">
-                      {job.nextRunTime ? formatDateTime(job.nextRunTime) : 'Not scheduled'}
+                      {job.nextRunTime ? formatDateTime(job.nextRunTime) : props.notScheduledText}
                     </td>
                     <td class="py-2 px-2 text-gray-500 text-xs font-mono">
                       {job.trigger}
@@ -230,6 +244,13 @@ function LoginForm(props: {
   onLogin: (username: string, password: string) => void;
   error: string | null;
   isLoading: boolean;
+  labels: {
+    title: string;
+    username: string;
+    password: string;
+    login: string;
+    loggingIn: string;
+  };
 }): JSX.Element {
   const [username, setUsername] = createSignal('');
   const [password, setPassword] = createSignal('');
@@ -242,7 +263,7 @@ function LoginForm(props: {
   return (
     <div class="min-h-screen flex items-center justify-center bg-gray-50">
       <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6 text-center">Admin Login</h1>
+        <h1 class="text-2xl font-bold text-gray-900 mb-6 text-center">{props.labels.title}</h1>
 
         <Show when={props.error}>
           <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
@@ -253,7 +274,7 @@ function LoginForm(props: {
         <form onSubmit={handleSubmit}>
           <div class="mb-4">
             <label class="block text-gray-700 text-sm font-medium mb-2" for="username">
-              Username
+              {props.labels.username}
             </label>
             <input
               id="username"
@@ -268,7 +289,7 @@ function LoginForm(props: {
 
           <div class="mb-6">
             <label class="block text-gray-700 text-sm font-medium mb-2" for="password">
-              Password
+              {props.labels.password}
             </label>
             <input
               id="password"
@@ -289,7 +310,7 @@ function LoginForm(props: {
             <Show when={props.isLoading}>
               <LoadingSpinner />
             </Show>
-            {props.isLoading ? 'Logging in...' : 'Login'}
+            {props.isLoading ? props.labels.loggingIn : props.labels.login}
           </button>
         </form>
       </div>
@@ -301,6 +322,8 @@ function LoginForm(props: {
  * Admin Dashboard page.
  */
 export default function Admin(): JSX.Element {
+  const { t } = useI18n();
+
   // Auth state
   const [isAuthenticated, setIsAuthenticated] = createSignal(hasAdminCredentials());
   const [loginError, setLoginError] = createSignal<string | null>(null);
@@ -335,9 +358,9 @@ export default function Admin(): JSX.Element {
     } catch (err) {
       clearAdminCredentials();
       if (err instanceof ApiRequestError && err.statusCode === 401) {
-        setLoginError('Invalid username or password');
+        setLoginError(t('admin.loginError'));
       } else {
-        setLoginError('Login failed. Please try again.');
+        setLoginError(t('admin.loginFailed'));
       }
     } finally {
       setIsLoggingIn(false);
@@ -374,16 +397,16 @@ export default function Admin(): JSX.Element {
           handleLogout();
           return;
         } else if (err.statusCode === 429) {
-          setError('Too many requests. Please wait a moment and try again.');
+          setError(t('admin.tooManyRequests'));
         } else {
           setError(err.message);
         }
       } else if (err instanceof NetworkError) {
-        setError('Network error - please check your connection.');
+        setError(t('admin.networkError'));
       } else if (err instanceof TimeoutError) {
-        setError('Request timed out - the server may be busy. Please try again.');
+        setError(t('admin.timeoutError'));
       } else {
-        setError('An unexpected error occurred. Please try again.');
+        setError(t('admin.unexpectedError'));
       }
     } finally {
       setIsLoadingStatus(false);
@@ -411,11 +434,11 @@ export default function Admin(): JSX.Element {
       if (err instanceof ApiRequestError) {
         setError(err.message);
       } else if (err instanceof NetworkError) {
-        setError('Network error - please check your connection.');
+        setError(t('admin.networkError'));
       } else if (err instanceof TimeoutError) {
-        setError('Request timed out - please try again.');
+        setError(t('admin.timeoutError'));
       } else {
-        setError('Failed to toggle scheduler');
+        setError(t('admin.failedToggleScheduler'));
       }
     } finally {
       setIsTogglingScheduler(false);
@@ -438,14 +461,14 @@ export default function Admin(): JSX.Element {
     try {
       const result = await triggerForecastCollection();
       setActionMessage(
-        `Forecast collection: ${result.status} - ${result.recordsCollected} records in ${formatDuration(result.durationSeconds)}`
+        `${t('admin.forecastCollection')}: ${result.status} - ${result.recordsCollected} ${t('admin.records').toLowerCase()} in ${formatDuration(result.durationSeconds)}`
       );
       await fetchData();
     } catch (err) {
       if (err instanceof ApiRequestError) {
         setError(err.message);
       } else {
-        setError('Failed to trigger forecast collection');
+        setError(t('admin.failedTriggerForecast'));
       }
     } finally {
       setIsCollectingForecasts(false);
@@ -461,14 +484,14 @@ export default function Admin(): JSX.Element {
     try {
       const result = await triggerObservationCollection();
       setActionMessage(
-        `Observation collection: ${result.status} - ${result.recordsCollected} records in ${formatDuration(result.durationSeconds)}`
+        `${t('admin.observationCollection')}: ${result.status} - ${result.recordsCollected} ${t('admin.records').toLowerCase()} in ${formatDuration(result.durationSeconds)}`
       );
       await fetchData();
     } catch (err) {
       if (err instanceof ApiRequestError) {
         setError(err.message);
       } else {
-        setError('Failed to trigger observation collection');
+        setError(t('admin.failedTriggerObservation'));
       }
     } finally {
       setIsCollectingObservations(false);
@@ -516,6 +539,13 @@ export default function Admin(): JSX.Element {
         onLogin={handleLogin}
         error={loginError()}
         isLoading={isLoggingIn()}
+        labels={{
+          title: t('admin.login'),
+          username: t('admin.username'),
+          password: t('admin.password'),
+          login: t('admin.login'),
+          loggingIn: t('admin.loggingIn'),
+        }}
       />
     );
   }
@@ -525,11 +555,11 @@ export default function Admin(): JSX.Element {
       {/* Header */}
       <div class="flex items-center justify-between mb-8">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <h1 class="text-3xl font-bold text-gray-900">{t('admin.dashboard')}</h1>
           <Show when={lastRefresh()}>
             <p class="text-sm text-gray-500 mt-1">
-              Last updated: {lastRefresh()?.toLocaleTimeString('fr-FR')}
-              <span class="ml-2 text-gray-400">(auto-refresh every 30s)</span>
+              {t('admin.lastUpdated')}: {lastRefresh()?.toLocaleTimeString()}
+              <span class="ml-2 text-gray-400">({t('admin.autoRefresh')})</span>
             </p>
           </Show>
         </div>
@@ -539,13 +569,13 @@ export default function Admin(): JSX.Element {
             disabled={isLoadingStatus()}
             class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50"
           >
-            Refresh
+            {t('admin.refresh')}
           </button>
           <button
             onClick={handleLogout}
             class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
           >
-            Logout
+            {t('admin.logout')}
           </button>
         </div>
       </div>
@@ -586,7 +616,7 @@ export default function Admin(): JSX.Element {
       <Show when={isLoadingStatus() && !status()}>
         <div class="flex items-center justify-center py-12">
           <div class="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" />
-          <span class="ml-3 text-gray-600">Loading admin data...</span>
+          <span class="ml-3 text-gray-600">{t('admin.loadingAdminData')}</span>
         </div>
       </Show>
 
@@ -597,7 +627,7 @@ export default function Admin(): JSX.Element {
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             {/* Status Indicator */}
             <div class="flex items-center gap-4">
-              <h2 class="text-xl font-semibold text-gray-800">Scheduler Status</h2>
+              <h2 class="text-xl font-semibold text-gray-800">{t('admin.schedulerStatus')}</h2>
               <div class="flex items-center gap-2" role="status" aria-live="polite">
                 <span
                   class={`h-3 w-3 rounded-full ${
@@ -610,7 +640,7 @@ export default function Admin(): JSX.Element {
                     status()?.running ? 'text-green-600' : 'text-red-600'
                   }`}
                 >
-                  {status()?.running ? 'Running' : 'Stopped'}
+                  {status()?.running ? t('admin.running') : t('admin.stopped')}
                 </span>
               </div>
             </div>
@@ -621,7 +651,7 @@ export default function Admin(): JSX.Element {
                 when={!confirmStopScheduler()}
                 fallback={
                   <div class="flex items-center gap-2">
-                    <span class="text-red-600 font-medium">Stop scheduler?</span>
+                    <span class="text-red-600 font-medium">{t('admin.confirmStop')}</span>
                     <button
                       onClick={handleToggleScheduler}
                       disabled={isTogglingScheduler()}
@@ -630,13 +660,13 @@ export default function Admin(): JSX.Element {
                       <Show when={isTogglingScheduler()}>
                         <LoadingSpinner />
                       </Show>
-                      Confirm
+                      {t('admin.confirm')}
                     </button>
                     <button
                       onClick={cancelStopScheduler}
                       class="px-3 py-1 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded font-medium transition-colors"
                     >
-                      Cancel
+                      {t('admin.cancel')}
                     </button>
                   </div>
                 }
@@ -653,7 +683,7 @@ export default function Admin(): JSX.Element {
                   <Show when={isTogglingScheduler()}>
                     <LoadingSpinner />
                   </Show>
-                  {status()?.running ? 'Stop Scheduler' : 'Start Scheduler'}
+                  {status()?.running ? t('admin.stopScheduler') : t('admin.startScheduler')}
                 </button>
               </Show>
 
@@ -665,7 +695,7 @@ export default function Admin(): JSX.Element {
                 <Show when={isCollectingForecasts()}>
                   <LoadingSpinner />
                 </Show>
-                Collect Forecasts
+                {t('admin.triggerForecasts')}
               </button>
 
               <button
@@ -676,7 +706,7 @@ export default function Admin(): JSX.Element {
                 <Show when={isCollectingObservations()}>
                   <LoadingSpinner />
                 </Show>
-                Collect Observations
+                {t('admin.triggerObservations')}
               </button>
             </div>
           </div>
@@ -685,19 +715,37 @@ export default function Admin(): JSX.Element {
         {/* Scheduled Jobs */}
         <Show when={jobs()}>
           <div class="mb-6">
-            <ScheduledJobsTable jobs={jobs()?.jobs || []} />
+            <ScheduledJobsTable
+              jobs={jobs()?.jobs || []}
+              title={t('admin.scheduledJobs')}
+              noJobsText={t('admin.noJobsScheduled')}
+              jobLabel={t('admin.job')}
+              nextRunLabel={t('admin.nextRun')}
+              triggerLabel={t('admin.trigger')}
+              notScheduledText={t('admin.notScheduled')}
+            />
           </div>
         </Show>
 
         {/* Execution History */}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ExecutionHistoryTable
-            title="Forecast Collection History"
+            title={t('admin.forecastHistory')}
             history={status()?.forecastHistory || []}
+            noHistoryText={t('admin.noExecutionHistory')}
+            timeLabel={t('admin.time')}
+            statusLabel={t('admin.status')}
+            recordsLabel={t('admin.records')}
+            durationLabel={t('admin.duration')}
           />
           <ExecutionHistoryTable
-            title="Observation Collection History"
+            title={t('admin.observationHistory')}
             history={status()?.observationHistory || []}
+            noHistoryText={t('admin.noExecutionHistory')}
+            timeLabel={t('admin.time')}
+            statusLabel={t('admin.status')}
+            recordsLabel={t('admin.records')}
+            durationLabel={t('admin.duration')}
           />
         </div>
       </Show>

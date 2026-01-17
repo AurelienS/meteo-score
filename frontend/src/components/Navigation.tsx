@@ -2,15 +2,19 @@ import { createSignal, type Component } from 'solid-js';
 import { Show } from 'solid-js';
 import { A } from '@solidjs/router';
 import ThemeToggle from './ThemeToggle';
+import LanguageSwitcher from './LanguageSwitcher';
+import { useI18n } from '../contexts/I18nContext';
 
 /**
  * Navigation header component.
  * Provides responsive navigation with links to main pages.
  * Includes mobile hamburger menu for smaller screens.
  * Includes theme toggle for dark/light mode.
+ * Includes language switcher for FR/EN.
  */
 const Navigation: Component = () => {
   const [isMenuOpen, setIsMenuOpen] = createSignal(false);
+  const { t } = useI18n();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen());
 
@@ -26,7 +30,7 @@ const Navigation: Component = () => {
         <div class="flex items-center justify-between h-16">
           {/* Logo/Brand */}
           <A href="/" class="flex items-center space-x-2 hover:opacity-90 transition-opacity">
-            <span class="text-2xl font-bold">MétéoScore</span>
+            <span class="text-2xl font-bold">{t('brand')}</span>
           </A>
 
           {/* Desktop Navigation Links */}
@@ -37,20 +41,22 @@ const Navigation: Component = () => {
               activeClass="underline underline-offset-4"
               end
             >
-              Home
+              {t('nav.home')}
             </A>
             <A
               href="/methodology"
               class="hover:opacity-80 transition-opacity font-medium"
               activeClass="underline underline-offset-4"
             >
-              Methodology
+              {t('nav.methodology')}
             </A>
+            <LanguageSwitcher />
             <ThemeToggle />
           </div>
 
-          {/* Mobile: Theme Toggle + Hamburger */}
+          {/* Mobile: Language + Theme Toggle + Hamburger */}
           <div class="md:hidden flex items-center space-x-2">
+            <LanguageSwitcher />
             <ThemeToggle />
             <button
               class="p-2 rounded hover:bg-white/10 transition-colors"
@@ -88,7 +94,7 @@ const Navigation: Component = () => {
                 onClick={() => setIsMenuOpen(false)}
                 end
               >
-                Home
+                {t('nav.home')}
               </A>
               <A
                 href="/methodology"
@@ -96,7 +102,7 @@ const Navigation: Component = () => {
                 activeClass="bg-white/10"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Methodology
+                {t('nav.methodology')}
               </A>
             </div>
           </div>
