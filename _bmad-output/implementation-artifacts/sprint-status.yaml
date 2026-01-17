@@ -89,3 +89,12 @@ development_status:
   5-1-backend-admin-api-with-basic-auth: done
   5-2-frontend-admin-dashboard-page: done
   epic-5-retrospective: optional
+
+  # Epic 6: UI Polish & User Experience Enhancements
+  epic-6: in-progress
+  6-1-bug-fixes-cleanup: done
+  6-2-theming-system-dark-light-mode: backlog
+  6-3-internationalization-i18n: backlog
+  6-4-typography-improvements: backlog
+  6-5-ui-micro-animations: backlog
+  epic-6-retrospective: optional

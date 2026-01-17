@@ -32,7 +32,7 @@ const Navigation: Component = () => {
               Home
             </A>
             <A
-              href="/about"
+              href="/methodology"
               class="hover:text-blue-200 transition-colors font-medium"
               activeClass="text-blue-200 underline underline-offset-4"
             >
@@ -76,7 +76,7 @@ const Navigation: Component = () => {
                 Home
               </A>
               <A
-                href="/about"
+                href="/methodology"
                 class="px-2 py-2 rounded hover:bg-blue-700 transition-colors font-medium"
                 activeClass="bg-blue-700"
                 onClick={() => setIsMenuOpen(false)}

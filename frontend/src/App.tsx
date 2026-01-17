@@ -70,7 +70,7 @@ const App: Component = () => {
       <Router root={Layout}>
         <Route path="/" component={Home} />
         <Route path="/sites/:id" component={SiteDetail} />
-        <Route path="/about" component={About} />
+        <Route path="/methodology" component={About} />
         <Route path="/admin" component={Admin} />
         <Route path="*" component={NotFound} />
       </Router>

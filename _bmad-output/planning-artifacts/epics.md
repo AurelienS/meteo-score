@@ -7,8 +7,8 @@ inputDocuments:
 date: "2026-01-10"
 author: "boss"
 project_name: "meteo-score"
-totalEpics: 5
-totalStories: 30
+totalEpics: 6
+totalStories: 35
 ---
 
 # meteo-score - Epic Breakdown
@@ -3997,4 +3997,229 @@ curl http://localhost/
 - [ ] Auto-refresh status every 30s
 - [ ] Error handling for failed requests
 - [ ] Nginx config allows /admin route (SPA fallback)
+
+---
+
+## Epic 6: UI Polish & User Experience Enhancements
+
+### Epic Overview
+
+**Goal:** Improve the overall user experience through bug fixes, theming support, internationalization, typography refinements, and subtle UI animations.
+
+**Value:** Enhances usability for both French and English users, provides dark mode for comfortable viewing, and creates a more polished, professional feel.
+
+**Dependencies:** Epics 1-4 complete (core frontend exists)
+
+**Priority Order:** 6.1 → 6.2 → 6.3 → 6.4 → 6.5
+
+---
+
+### Story 6.1: Bug Fixes & Cleanup
+
+**As a** user,
+**I want** consistent URLs and working links,
+**So that** I can navigate the site without confusion or broken references.
+
+#### Acceptance Criteria:
+
+**Given** I navigate to the methodology/about page
+**When** checking the URL
+**Then** URL is consistent (`/methodology` preferred, redirect `/about` if needed)
+
+**Given** I view the methodology page
+**When** clicking GitHub links
+**Then** they point to `https://github.com/AurelienS/meteo-score` (not `my-org/...`)
+
+**Given** I check all external links on the methodology page
+**When** clicking each link
+**Then** all links resolve correctly (no 404s)
+
+**Implementation Notes:**
+- Audit all routes in App.tsx router
+- Search codebase for "my-org" and "github.com" references
+- Decide: rename route to `/methodology` OR keep `/about` with proper naming
+- Test all external links manually
+
+**Definition of Done:**
+- [ ] URL consistency resolved (`/methodology` or `/about` - pick one)
+- [ ] All GitHub links point to correct repository
+- [ ] All external links verified working
+- [ ] No "my-org" placeholder text anywhere in codebase
+
+---
+
+### Story 6.2: Theming System (Dark/Light Mode)
+
+**As a** user,
+**I want** to switch between light and dark themes,
+**So that** I can use the app comfortably in different lighting conditions.
+
+#### Acceptance Criteria:
+
+**Given** I visit the site for the first time
+**When** my system preference is dark mode
+**Then** the app loads in dark mode automatically
+
+**Given** I am viewing the app
+**When** I click the theme toggle
+**Then** the theme switches immediately without page reload
+
+**Given** I switch to dark mode
+**When** I close and reopen the browser
+**Then** my preference is remembered (localStorage)
+
+**Given** any theme is active
+**When** viewing any page
+**Then** all components render correctly with proper contrast
+
+**Implementation Notes:**
+- Use CSS custom properties (variables) for all colors
+- Create ThemeProvider context for Solid.js
+- Store preference in localStorage, fallback to system preference
+- Theme toggle in header/nav area
+- Ensure WCAG AA contrast in both themes
+- Architecture: Design for future theme additions (not just dark/light)
+
+**Definition of Done:**
+- [ ] CSS variables for all color tokens (background, text, borders, accents)
+- [ ] ThemeProvider context with toggle function
+- [ ] Theme toggle UI component in header
+- [ ] System preference detection (prefers-color-scheme)
+- [ ] localStorage persistence
+- [ ] All components styled for both themes
+- [ ] WCAG AA contrast verified for both themes
+- [ ] No flash of wrong theme on page load (FOUC prevention)
+
+---
+
+### Story 6.3: Internationalization (i18n)
+
+**As a** user,
+**I want** to view the app in French or English,
+**So that** I can understand the content in my preferred language.
+
+#### Acceptance Criteria:
+
+**Given** I visit the site
+**When** my browser language is French
+**Then** the app displays in French ("Météo Score" with accent)
+
+**Given** I visit the site
+**When** my browser language is English
+**Then** the app displays in English ("Meteo Score" without accent)
+
+**Given** I am viewing the app
+**When** I use the language switcher
+**Then** all text updates immediately without page reload
+
+**Given** I switch language
+**When** I return later
+**Then** my preference is remembered
+
+**Implementation Notes:**
+- Use a lightweight i18n library (e.g., @solid-primitives/i18n or simple context)
+- Create translation files: `locales/fr.json`, `locales/en.json`
+- Language switcher in header (FR | EN toggle)
+- Store preference in localStorage, fallback to browser language
+- Handle brand name: "Météo Score" (FR) vs "Meteo Score" (EN)
+- Structure translations for easy addition of future languages
+
+**Definition of Done:**
+- [ ] i18n provider/context setup
+- [ ] French translation file (complete)
+- [ ] English translation file (complete)
+- [ ] Language switcher UI in header
+- [ ] Browser language detection
+- [ ] localStorage preference persistence
+- [ ] All user-facing strings extracted to translation files
+- [ ] Brand name handles accent correctly per language
+- [ ] Date/number formatting locale-aware
+
+---
+
+### Story 6.4: Typography Improvements
+
+**As a** user,
+**I want** clean, readable typography,
+**So that** the data is easy to read and the app feels professional.
+
+#### Acceptance Criteria:
+
+**Given** I view any page
+**When** fonts load
+**Then** Geist fonts render correctly without FOUT (flash of unstyled text)
+
+**Given** fonts fail to load
+**When** viewing any page
+**Then** fallback system fonts provide acceptable appearance
+
+**Given** I view on any device
+**When** reading text
+**Then** font sizes are appropriate and readable
+
+**Implementation Notes:**
+- Audit current Geist font loading (is it working correctly?)
+- Implement proper font-display strategy (swap vs optional)
+- Define fallback font stack: Geist Sans → -apple-system → BlinkMacSystemFont → Segoe UI → sans-serif
+- Consider font subsetting for performance
+- Review line-height, letter-spacing for data-dense tables
+- Test on multiple browsers/devices
+
+**Definition of Done:**
+- [ ] Geist fonts loading correctly verified
+- [ ] Proper font-display CSS property set
+- [ ] Fallback font stack defined
+- [ ] No FOUT or FOIT issues
+- [ ] Typography scale reviewed (headings, body, data)
+- [ ] Table typography optimized for data readability
+- [ ] Performance: fonts not blocking render
+
+---
+
+### Story 6.5: UI Micro-animations
+
+**As a** user,
+**I want** subtle animations and transitions,
+**So that** the interface feels responsive and polished.
+
+#### Acceptance Criteria:
+
+**Given** I interact with buttons or links
+**When** hovering
+**Then** there's a subtle hover state transition (not instant)
+
+**Given** I click a button
+**When** action is processing
+**Then** there's a loading state animation
+
+**Given** data is loading
+**When** waiting for API response
+**Then** skeleton loaders or subtle spinners appear
+
+**Given** I navigate between pages
+**When** content changes
+**Then** transitions are smooth (fade or slide)
+
+**Given** any animation plays
+**When** I have reduced-motion preference
+**Then** animations are disabled or minimized
+
+**Implementation Notes:**
+- Use CSS transitions for hover/focus states (150-300ms)
+- Avoid heavy JS animations - prefer CSS
+- Implement skeleton loaders for data tables
+- Add loading spinners to buttons during async actions
+- Respect prefers-reduced-motion media query
+- Keep animations subtle - professional, not playful
+- Focus areas: buttons, cards, page transitions, loading states
+
+**Definition of Done:**
+- [ ] Button hover/focus transitions (all buttons)
+- [ ] Card hover effects (if applicable)
+- [ ] Loading button states with spinner
+- [ ] Skeleton loaders for data tables
+- [ ] Page transition animations (subtle fade)
+- [ ] prefers-reduced-motion support
+- [ ] No janky or laggy animations
+- [ ] Animation duration consistent (design tokens)
 

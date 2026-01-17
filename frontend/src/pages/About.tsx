@@ -223,7 +223,7 @@ const About: Component = () => {
           <ul class="list-disc list-outside text-gray-600 space-y-2 mb-4 ml-6">
             <li>
               <a
-                href="https://github.com/your-org/meteo-score"
+                href="https://github.com/AurelienS/meteo-score"
                 class="text-primary-500 hover:text-primary-600 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded inline-flex items-center gap-1"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -237,7 +237,7 @@ const About: Component = () => {
             </li>
             <li>
               <a
-                href="https://github.com/your-org/meteo-score/blob/main/docs/METHODOLOGY.md"
+                href="https://github.com/AurelienS/meteo-score/blob/main/docs/METHODOLOGY.md"
                 class="text-primary-500 hover:text-primary-600 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded inline-flex items-center gap-1"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -260,7 +260,7 @@ const About: Component = () => {
           <p class="text-gray-600 leading-relaxed mb-4">
             We welcome questions, suggestions, and bug reports. Please open an issue on{' '}
             <a
-              href="https://github.com/your-org/meteo-score/issues"
+              href="https://github.com/AurelienS/meteo-score/issues"
               class="text-primary-500 hover:text-primary-600 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded inline-flex items-center gap-1"
               target="_blank"
               rel="noopener noreferrer"
