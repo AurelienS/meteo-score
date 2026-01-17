@@ -1,6 +1,7 @@
 import type { Component } from 'solid-js';
 import { createMemo, For, Show } from 'solid-js';
 import type { ModelAccuracyMetrics, ConfidenceLevel } from '../lib/types';
+import { useI18n } from '../contexts/I18nContext';
 
 /** Threshold below which bias is considered negligible (in parameter units) */
 const BIAS_NEGLIGIBLE_THRESHOLD = 0.5;
@@ -15,44 +16,11 @@ export interface ModelComparisonTableProps {
 }
 
 /**
- * Get confidence badge styling and text.
- * Maps confidence levels to color-coded badges.
- */
-function getConfidenceBadge(level: ConfidenceLevel): { text: string; color: string } {
-  switch (level) {
-    case 'validated':
-      return { text: 'Validated', color: 'bg-status-success-bg text-status-success-text border border-status-success-border' };
-    case 'preliminary':
-      return { text: 'Preliminary', color: 'bg-status-warning-bg text-status-warning-text border border-status-warning-border' };
-    case 'insufficient':
-      return { text: 'Insufficient Data', color: 'bg-status-error-bg text-status-error-text border border-status-error-border' };
-    default: {
-      // Exhaustive check - TypeScript will error if a case is missing
-      const _exhaustiveCheck: never = level;
-      return _exhaustiveCheck;
-    }
-  }
-}
-
-/**
- * Get human-readable bias interpretation text.
- * Positive bias = forecast < observed (underestimation).
- */
-function getBiasText(bias: number, unit: string): string {
-  if (Math.abs(bias) < BIAS_NEGLIGIBLE_THRESHOLD) {
-    return 'No systematic bias';
-  } else if (bias > 0) {
-    return `Underestimates by ${bias.toFixed(1)} ${unit}`;
-  } else {
-    return `Overestimates by ${Math.abs(bias).toFixed(1)} ${unit}`;
-  }
-}
-
-/**
  * Table component displaying model accuracy comparison.
  * Models are sorted by MAE (best first) with the best model highlighted.
  */
 const ModelComparisonTable: Component<ModelComparisonTableProps> = (props) => {
+  const { t } = useI18n();
   const tableId = 'model-comparison-table';
 
   // Sort models by MAE ascending (best accuracy first)
@@ -60,19 +28,53 @@ const ModelComparisonTable: Component<ModelComparisonTableProps> = (props) => {
     return [...props.models].sort((a, b) => a.mae - b.mae);
   });
 
+  /**
+   * Get confidence badge styling and text.
+   * Maps confidence levels to color-coded badges.
+   */
+  const getConfidenceBadge = (level: ConfidenceLevel): { text: string; color: string } => {
+    switch (level) {
+      case 'validated':
+        return { text: t('components.comparison.validated'), color: 'bg-status-success-bg text-status-success-text border border-status-success-border' };
+      case 'preliminary':
+        return { text: t('components.comparison.preliminary'), color: 'bg-status-warning-bg text-status-warning-text border border-status-warning-border' };
+      case 'insufficient':
+        return { text: t('components.comparison.insufficientData'), color: 'bg-status-error-bg text-status-error-text border border-status-error-border' };
+      default: {
+        // Exhaustive check - TypeScript will error if a case is missing
+        const _exhaustiveCheck: never = level;
+        return _exhaustiveCheck;
+      }
+    }
+  };
+
+  /**
+   * Get human-readable bias interpretation text.
+   * Positive bias = forecast < observed (underestimation).
+   */
+  const getBiasText = (bias: number, unit: string): string => {
+    if (Math.abs(bias) < BIAS_NEGLIGIBLE_THRESHOLD) {
+      return t('components.comparison.noBias');
+    } else if (bias > 0) {
+      return t('components.comparison.underestimates', { value: bias.toFixed(1), unit });
+    } else {
+      return t('components.comparison.overestimates', { value: Math.abs(bias).toFixed(1), unit });
+    }
+  };
+
   return (
     <div class="w-full">
       <h2
         id={`${tableId}-label`}
         class="text-base md:text-lg font-semibold text-theme-text-primary mb-4"
       >
-        Model Comparison
+        {t('components.comparison.title')}
       </h2>
 
       {/* Empty state */}
       <Show when={props.models.length === 0}>
         <div class="bg-theme-bg-tertiary rounded-lg p-8 text-center">
-          <p class="text-theme-text-tertiary">No data available for this configuration</p>
+          <p class="text-theme-text-tertiary">{t('components.comparison.noData')}</p>
         </div>
       </Show>
 
@@ -92,31 +94,31 @@ const ModelComparisonTable: Component<ModelComparisonTableProps> = (props) => {
                   scope="col"
                   class="px-6 py-3 text-left text-xs font-medium text-theme-text-tertiary uppercase tracking-wider"
                 >
-                  Model
+                  {t('components.comparison.model')}
                 </th>
                 <th
                   scope="col"
                   class="px-6 py-3 text-left text-xs font-medium text-theme-text-tertiary uppercase tracking-wider"
                 >
-                  MAE ({props.parameterUnit})
+                  {t('components.comparison.mae')} ({props.parameterUnit})
                 </th>
                 <th
                   scope="col"
                   class="px-6 py-3 text-left text-xs font-medium text-theme-text-tertiary uppercase tracking-wider"
                 >
-                  Bias
+                  {t('components.comparison.bias')}
                 </th>
                 <th
                   scope="col"
                   class="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-theme-text-tertiary uppercase tracking-wider"
                 >
-                  Sample Size
+                  {t('components.comparison.sampleSize')}
                 </th>
                 <th
                   scope="col"
                   class="px-6 py-3 text-left text-xs font-medium text-theme-text-tertiary uppercase tracking-wider"
                 >
-                  Confidence
+                  {t('components.comparison.confidence')}
                 </th>
               </tr>
             </thead>
@@ -134,7 +136,7 @@ const ModelComparisonTable: Component<ModelComparisonTableProps> = (props) => {
                           </span>
                           <Show when={index() === 0}>
                             <span class="px-2 py-0.5 text-xs font-medium bg-status-success-bg text-status-success-text border border-status-success-border rounded">
-                              Best
+                              {t('components.comparison.best')}
                             </span>
                           </Show>
                         </div>
@@ -146,7 +148,7 @@ const ModelComparisonTable: Component<ModelComparisonTableProps> = (props) => {
                         {getBiasText(model.bias, props.parameterUnit)}
                       </td>
                       <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-theme-text-secondary">
-                        {model.sampleSize.toLocaleString()} measurements
+                        {model.sampleSize.toLocaleString()} {t('components.comparison.measurements')}
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap">
                         <span

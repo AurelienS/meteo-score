@@ -1,6 +1,7 @@
 import type { Component } from 'solid-js';
 import { createMemo, Show } from 'solid-js';
 import type { ConfidenceLevel } from '../lib/types';
+import { useI18n } from '../contexts/I18nContext';
 
 /** Threshold below which bias is considered negligible (in parameter units) */
 const BIAS_EXCELLENT_THRESHOLD = 1.0;
@@ -19,43 +20,38 @@ export interface BiasCharacterizationCardProps {
 
 /** Interpretation data for bias display */
 interface BiasInterpretation {
-  title: string;
-  description: string;
+  titleKey: string;
+  descKey: string;
   icon: string;
   borderColor: string;
 }
 
 /**
- * Get bias interpretation based on bias value.
+ * Get bias interpretation keys based on bias value.
  * Positive bias = forecast < observed (underestimation).
  * Negative bias = forecast > observed (overestimation).
  */
-function getBiasInterpretation(
-  bias: number,
-  modelName: string,
-  parameterName: string,
-  parameterUnit: string
-): BiasInterpretation {
+function getBiasInterpretationKeys(bias: number): BiasInterpretation {
   const absBias = Math.abs(bias);
 
   if (absBias < BIAS_EXCELLENT_THRESHOLD) {
     return {
-      title: 'Excellent Calibration',
-      description: `${modelName} has minimal systematic bias for ${parameterName}.`,
+      titleKey: 'components.bias.excellentTitle',
+      descKey: 'components.bias.excellentDesc',
       icon: '🎯',
       borderColor: 'border-l-green-500',
     };
   } else if (bias > 0) {
     return {
-      title: 'Systematic Underestimation',
-      description: `${modelName} typically underestimates ${parameterName} by ${absBias.toFixed(1)} ${parameterUnit} on average. Expect conditions to be slightly stronger than predicted.`,
+      titleKey: 'components.bias.underestimationTitle',
+      descKey: 'components.bias.underestimationDesc',
       icon: '⬆️',
       borderColor: 'border-l-blue-500',
     };
   } else {
     return {
-      title: 'Systematic Overestimation',
-      description: `${modelName} typically overestimates ${parameterName} by ${absBias.toFixed(1)} ${parameterUnit} on average. Expect conditions to be slightly weaker than predicted.`,
+      titleKey: 'components.bias.overestimationTitle',
+      descKey: 'components.bias.overestimationDesc',
       icon: '⬇️',
       borderColor: 'border-l-orange-500',
     };
@@ -67,15 +63,10 @@ function getBiasInterpretation(
  * Shows user-friendly explanation of systematic bias with practical example.
  */
 const BiasCharacterizationCard: Component<BiasCharacterizationCardProps> = (props) => {
-  // Memoized interpretation for reactivity
-  const interpretation = createMemo(() =>
-    getBiasInterpretation(
-      props.bias,
-      props.modelName,
-      props.parameterName,
-      props.parameterUnit
-    )
-  );
+  const { t } = useI18n();
+
+  // Memoized interpretation keys for reactivity
+  const interpretation = createMemo(() => getBiasInterpretationKeys(props.bias));
 
   // Calculate adjusted forecast value for practical example
   // bias = observed - forecast, so expected_actual = forecast + bias
@@ -90,6 +81,17 @@ const BiasCharacterizationCard: Component<BiasCharacterizationCardProps> = (prop
   });
   const adjustedValue = createMemo(() => exampleForecast() + props.bias);
 
+  const title = createMemo(() => t(interpretation().titleKey));
+  const description = createMemo(() => {
+    const absBias = Math.abs(props.bias);
+    return t(interpretation().descKey, {
+      model: props.modelName,
+      parameter: props.parameterName.toLowerCase(),
+      value: absBias.toFixed(1),
+      unit: props.parameterUnit,
+    });
+  });
+
   return (
     <div
       class={`border-l-4 ${interpretation().borderColor} bg-theme-bg-primary p-6 rounded-lg shadow-sm border border-theme-border-primary`}
@@ -103,26 +105,28 @@ const BiasCharacterizationCard: Component<BiasCharacterizationCardProps> = (prop
         <div class="flex-1">
           {/* Title */}
           <h3 class="text-lg font-semibold text-theme-text-primary mb-2">
-            {interpretation().title}
+            {title()}
           </h3>
 
           {/* Description */}
           <p class="text-theme-text-secondary mb-3">
-            {interpretation().description}
+            {description()}
           </p>
 
           {/* Practical example - only show if we have enough data */}
           <Show when={props.confidenceLevel !== 'insufficient'}>
             <div class="mt-4 p-4 bg-theme-bg-tertiary rounded">
               <p class="text-sm font-medium text-theme-text-secondary mb-2">
-                Practical Example:
+                {t('components.bias.practicalExample')}
               </p>
               <p class="text-sm text-theme-text-secondary">
-                If {props.modelName} forecasts {props.parameterName.toLowerCase()} at {exampleForecast()} {props.parameterUnit}, expect actual conditions around{' '}
-                <span class="font-semibold">
-                  {adjustedValue().toFixed(0)} {props.parameterUnit}
-                </span>
-                {' '}based on historical bias.
+                {t('components.bias.exampleText', {
+                  model: props.modelName,
+                  parameter: props.parameterName.toLowerCase(),
+                  forecast: exampleForecast(),
+                  actual: adjustedValue().toFixed(0),
+                  unit: props.parameterUnit,
+                })}
               </p>
             </div>
           </Show>
@@ -130,12 +134,12 @@ const BiasCharacterizationCard: Component<BiasCharacterizationCardProps> = (prop
           {/* Confidence warnings */}
           <Show when={props.confidenceLevel === 'preliminary'}>
             <p class="text-sm text-status-warning-text mt-3">
-              ⚠️ This bias characterization is preliminary. Results will stabilize with more data.
+              ⚠️ {t('components.bias.preliminaryWarning')}
             </p>
           </Show>
           <Show when={props.confidenceLevel === 'insufficient'}>
             <p class="text-sm text-status-error-text mt-3">
-              ⚠️ Insufficient data to reliably characterize bias.
+              ⚠️ {t('components.bias.insufficientWarning')}
             </p>
           </Show>
         </div>

@@ -165,5 +165,73 @@
     "kmh": "km/h",
     "celsius": "°C",
     "percent": "%"
+  },
+  "selectors": {
+    "flyingSite": "Flying Site",
+    "noSites": "No sites available",
+    "weatherParameter": "Weather Parameter",
+    "noParameters": "No parameters available",
+    "forecastHorizon": "Forecast Horizon",
+    "wind": "Wind",
+    "direction": "Direction",
+    "temperature": "Temp"
+  },
+  "components": {
+    "bias": {
+      "excellentTitle": "Excellent Calibration",
+      "excellentDesc": "{{model}} has minimal systematic bias for {{parameter}}.",
+      "underestimationTitle": "Systematic Underestimation",
+      "underestimationDesc": "{{model}} typically underestimates {{parameter}} by {{value}} {{unit}} on average. Expect conditions to be slightly stronger than predicted.",
+      "overestimationTitle": "Systematic Overestimation",
+      "overestimationDesc": "{{model}} typically overestimates {{parameter}} by {{value}} {{unit}} on average. Expect conditions to be slightly weaker than predicted.",
+      "practicalExample": "Practical Example:",
+      "exampleText": "If {{model}} forecasts {{parameter}} at {{forecast}} {{unit}}, expect actual conditions around {{actual}} {{unit}} based on historical bias.",
+      "preliminaryWarning": "This bias characterization is preliminary. Results will stabilize with more data.",
+      "insufficientWarning": "Insufficient data to reliably characterize bias."
+    },
+    "dataInfo": {
+      "title": "Data Information",
+      "lastUpdated": "Last Updated",
+      "sampleSize": "Sample Size",
+      "dataRange": "Data Range",
+      "measurements": "measurements",
+      "daysOfData": "{{days}} days of data",
+      "to": "to",
+      "justNow": "just now",
+      "minuteAgo": "{{count}} minute ago",
+      "minutesAgo": "{{count}} minutes ago",
+      "hourAgo": "{{count}} hour ago",
+      "hoursAgo": "{{count}} hours ago",
+      "dayAgo": "{{count}} day ago",
+      "daysAgo": "{{count}} days ago",
+      "validated": "Validated Data",
+      "validatedMsg": "Metrics are statistically reliable (90+ days)",
+      "preliminary": "Preliminary Data",
+      "preliminaryMsg": "Results will stabilize with more data (30-89 days)",
+      "insufficient": "Insufficient Data",
+      "insufficientMsg": "Collect more data for reliable metrics (<30 days)"
+    },
+    "comparison": {
+      "title": "Model Comparison",
+      "noData": "No data available for this configuration",
+      "model": "Model",
+      "mae": "MAE",
+      "bias": "Bias",
+      "sampleSize": "Sample Size",
+      "confidence": "Confidence",
+      "best": "Best",
+      "measurements": "measurements",
+      "validated": "Validated",
+      "preliminary": "Preliminary",
+      "insufficientData": "Insufficient Data",
+      "noBias": "No systematic bias",
+      "underestimates": "Underestimates by {{value}} {{unit}}",
+      "overestimates": "Overestimates by {{value}} {{unit}}"
+    },
+    "chart": {
+      "title": "Accuracy Evolution Over Time",
+      "noData": "No time series data available",
+      "ariaLabel": "Line chart showing model accuracy over time"
+    }
   }
 }

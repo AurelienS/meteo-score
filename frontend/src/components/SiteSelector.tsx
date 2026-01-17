@@ -1,6 +1,7 @@
 import type { Component } from 'solid-js';
 import { For, Show } from 'solid-js';
 import type { Site } from '../lib/types';
+import { useI18n } from '../contexts/I18nContext';
 
 /**
  * Props for SiteSelector component.
@@ -18,6 +19,7 @@ export interface SiteSelectorProps {
  * Uses Solid.js patterns: props object access, <For> component.
  */
 const SiteSelector: Component<SiteSelectorProps> = (props) => {
+  const { t } = useI18n();
   const selectId = 'site-selector';
 
   return (
@@ -26,7 +28,7 @@ const SiteSelector: Component<SiteSelectorProps> = (props) => {
         for={selectId}
         class="block text-sm font-medium text-theme-text-secondary mb-2"
       >
-        Flying Site
+        {t('selectors.flyingSite')}
       </label>
       <select
         id={selectId}
@@ -37,7 +39,7 @@ const SiteSelector: Component<SiteSelectorProps> = (props) => {
       >
         <Show when={props.sites.length === 0}>
           <option value={0} disabled>
-            No sites available
+            {t('selectors.noSites')}
           </option>
         </Show>
         <For each={props.sites}>

@@ -1,16 +1,7 @@
 import type { Component } from 'solid-js';
 import { For, Show } from 'solid-js';
 import type { Parameter } from '../lib/types';
-
-/**
- * Display name mapping for weather parameters with emojis.
- * Maps API parameter names to user-friendly display names.
- */
-export const PARAMETER_DISPLAY_NAMES: Record<string, { label: string; emoji: string }> = {
-  'wind_speed': { label: 'Wind', emoji: '💨' },
-  'wind_direction': { label: 'Direction', emoji: '🧭' },
-  'temperature': { label: 'Temp', emoji: '🌡️' },
-};
+import { useI18n } from '../contexts/I18nContext';
 
 /**
  * Props for ParameterSelector component.
@@ -23,26 +14,41 @@ export interface ParameterSelectorProps {
   onParameterChange: (parameterId: number) => void;
 }
 
-/**
- * Get display info for a parameter (label and emoji).
- * Falls back to capitalizing the name if not in mapping.
- */
-function getDisplayInfo(name: string): { label: string; emoji: string } {
-  if (PARAMETER_DISPLAY_NAMES[name]) {
-    return PARAMETER_DISPLAY_NAMES[name];
-  }
-  return {
-    label: name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-    emoji: '📊'
-  };
+/** Parameter display info with emoji */
+interface ParameterDisplayInfo {
+  labelKey: string;
+  emoji: string;
 }
+
+/** Mapping of parameter API names to display info */
+const PARAMETER_CONFIG: Record<string, ParameterDisplayInfo> = {
+  'wind_speed': { labelKey: 'selectors.wind', emoji: '💨' },
+  'wind_direction': { labelKey: 'selectors.direction', emoji: '🧭' },
+  'temperature': { labelKey: 'selectors.temperature', emoji: '🌡️' },
+};
 
 /**
  * Radio button group component for selecting a weather parameter.
  * Uses Solid.js patterns: props object access, <For> component.
  */
 const ParameterSelector: Component<ParameterSelectorProps> = (props) => {
+  const { t } = useI18n();
   const groupId = 'parameter-selector';
+
+  /**
+   * Get display info for a parameter (label and emoji).
+   * Falls back to capitalizing the name if not in mapping.
+   */
+  const getDisplayInfo = (name: string): { label: string; emoji: string } => {
+    const config = PARAMETER_CONFIG[name];
+    if (config) {
+      return { label: t(config.labelKey), emoji: config.emoji };
+    }
+    return {
+      label: name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+      emoji: '📊'
+    };
+  };
 
   return (
     <div class="w-full">
@@ -50,7 +56,7 @@ const ParameterSelector: Component<ParameterSelectorProps> = (props) => {
         id={`${groupId}-label`}
         class="block text-sm font-medium text-theme-text-secondary mb-2"
       >
-        Weather Parameter
+        {t('selectors.weatherParameter')}
       </label>
       <div
         role="radiogroup"
@@ -58,7 +64,7 @@ const ParameterSelector: Component<ParameterSelectorProps> = (props) => {
         class="flex flex-wrap gap-2"
       >
         <Show when={props.parameters.length === 0}>
-          <span class="text-sm text-theme-text-muted">No parameters available</span>
+          <span class="text-sm text-theme-text-muted">{t('selectors.noParameters')}</span>
         </Show>
         <For each={props.parameters}>
           {(param) => {

@@ -165,5 +165,73 @@
     "kmh": "km/h",
     "celsius": "°C",
     "percent": "%"
+  },
+  "selectors": {
+    "flyingSite": "Site de Vol",
+    "noSites": "Aucun site disponible",
+    "weatherParameter": "Paramètre Météo",
+    "noParameters": "Aucun paramètre disponible",
+    "forecastHorizon": "Horizon de Prévision",
+    "wind": "Vent",
+    "direction": "Direction",
+    "temperature": "Temp"
+  },
+  "components": {
+    "bias": {
+      "excellentTitle": "Calibration Excellente",
+      "excellentDesc": "{{model}} présente un biais systématique minimal pour {{parameter}}.",
+      "underestimationTitle": "Sous-estimation Systématique",
+      "underestimationDesc": "{{model}} sous-estime généralement {{parameter}} de {{value}} {{unit}} en moyenne. Attendez-vous à des conditions légèrement plus fortes que prévu.",
+      "overestimationTitle": "Surestimation Systématique",
+      "overestimationDesc": "{{model}} surestime généralement {{parameter}} de {{value}} {{unit}} en moyenne. Attendez-vous à des conditions légèrement plus faibles que prévu.",
+      "practicalExample": "Exemple Pratique :",
+      "exampleText": "Si {{model}} prévoit {{parameter}} à {{forecast}} {{unit}}, attendez-vous à des conditions réelles autour de {{actual}} {{unit}} selon le biais historique.",
+      "preliminaryWarning": "Cette caractérisation du biais est préliminaire. Les résultats se stabiliseront avec plus de données.",
+      "insufficientWarning": "Données insuffisantes pour caractériser le biais de manière fiable."
+    },
+    "dataInfo": {
+      "title": "Informations sur les Données",
+      "lastUpdated": "Dernière Mise à Jour",
+      "sampleSize": "Taille de l'Échantillon",
+      "dataRange": "Plage de Données",
+      "measurements": "mesures",
+      "daysOfData": "{{days}} jours de données",
+      "to": "au",
+      "justNow": "à l'instant",
+      "minuteAgo": "il y a {{count}} minute",
+      "minutesAgo": "il y a {{count}} minutes",
+      "hourAgo": "il y a {{count}} heure",
+      "hoursAgo": "il y a {{count}} heures",
+      "dayAgo": "il y a {{count}} jour",
+      "daysAgo": "il y a {{count}} jours",
+      "validated": "Données Validées",
+      "validatedMsg": "Métriques statistiquement fiables (90+ jours)",
+      "preliminary": "Données Préliminaires",
+      "preliminaryMsg": "Les résultats se stabiliseront avec plus de données (30-89 jours)",
+      "insufficient": "Données Insuffisantes",
+      "insufficientMsg": "Collectez plus de données pour des métriques fiables (<30 jours)"
+    },
+    "comparison": {
+      "title": "Comparaison des Modèles",
+      "noData": "Aucune donnée disponible pour cette configuration",
+      "model": "Modèle",
+      "mae": "EAM",
+      "bias": "Biais",
+      "sampleSize": "Échantillon",
+      "confidence": "Confiance",
+      "best": "Meilleur",
+      "measurements": "mesures",
+      "validated": "Validé",
+      "preliminary": "Préliminaire",
+      "insufficientData": "Données Insuffisantes",
+      "noBias": "Pas de biais systématique",
+      "underestimates": "Sous-estime de {{value}} {{unit}}",
+      "overestimates": "Surestime de {{value}} {{unit}}"
+    },
+    "chart": {
+      "title": "Évolution de la Précision dans le Temps",
+      "noData": "Aucune donnée temporelle disponible",
+      "ariaLabel": "Graphique linéaire montrant la précision des modèles dans le temps"
+    }
   }
 }

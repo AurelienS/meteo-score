@@ -1,6 +1,7 @@
 import type { Component } from 'solid-js';
 import { createEffect, onMount, onCleanup, Show } from 'solid-js';
 import * as d3 from 'd3';
+import { useI18n } from '../contexts/I18nContext';
 
 /** Chart data point with Date object */
 export interface ChartDataPoint {
@@ -83,8 +84,28 @@ export function getModelColor(modelName: string, index: number): string {
  * Shows MAE over time for multiple models with interactive tooltip.
  */
 const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props) => {
+  const { t, language } = useI18n();
   let svgRef: SVGSVGElement | undefined;
   let tooltipRef: d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown> | null = null;
+
+  // Locale-aware date formatting for tooltip
+  const formatTooltipDate = (date: Date): string => {
+    const locale = language() === 'fr' ? 'fr-FR' : 'en-US';
+    return new Intl.DateTimeFormat(locale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }).format(date);
+  };
+
+  // Locale-aware short date for axis
+  const formatAxisDate = (date: Date): string => {
+    const locale = language() === 'fr' ? 'fr-FR' : 'en-US';
+    return new Intl.DateTimeFormat(locale, {
+      month: 'short',
+      day: 'numeric',
+    }).format(date);
+  };
 
   const drawChart = () => {
     if (!svgRef || props.models.length === 0) return;
@@ -132,13 +153,13 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
           .tickFormat(() => '')
       );
 
-    // X Axis
+    // X Axis with locale-aware formatting
     svg.append('g')
       .attr('transform', `translate(0,${height})`)
       .call(
         d3.axisBottom(xScale)
           .ticks(6)
-          .tickFormat((d: Date | d3.NumberValue) => d3.timeFormat('%b %d')(d as Date))
+          .tickFormat((d: Date | d3.NumberValue) => formatAxisDate(d as Date))
       )
       .selectAll('text')
       .attr('class', 'text-xs')
@@ -151,7 +172,8 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
       .attr('class', 'text-xs')
       .style('fill', 'var(--color-text-secondary)');
 
-    // Y-axis label
+    // Y-axis label (EAM in French, MAE in English)
+    const maeLabel = language() === 'fr' ? 'EAM' : 'MAE';
     svg.append('text')
       .attr('transform', 'rotate(-90)')
       .attr('y', -margin.left + 15)
@@ -159,7 +181,7 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
       .attr('text-anchor', 'middle')
       .attr('class', 'text-sm')
       .style('fill', 'var(--color-text-secondary)')
-      .text(`MAE (${props.parameterUnit})`);
+      .text(`${maeLabel} (${props.parameterUnit})`);
 
     // Line generator
     const line = d3.line<ChartDataPoint>()
@@ -252,7 +274,7 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
           .style('left', `${event.pageX + 15}px`)
           .style('top', `${event.pageY - 10}px`)
           .html(`
-            <div class="font-semibold mb-1" style="color: var(--color-text-primary)">${d3.timeFormat('%b %d, %Y')(date)}</div>
+            <div class="font-semibold mb-1" style="color: var(--color-text-primary)">${formatTooltipDate(date)}</div>
             ${values.map(v => {
               const safeName = escapeHtml(v.model.modelName);
               return `<div class="flex items-center gap-2">
@@ -297,25 +319,26 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
     });
   });
 
-  // Redraw when props change
+  // Redraw when props or language change
   createEffect(() => {
-    // Access props to track them (use void to suppress unused warnings)
+    // Access props and language to track them (use void to suppress unused warnings)
     void props.models;
     void props.parameterUnit;
+    void language();
     drawChart();
   });
 
   return (
     <div class="bg-theme-bg-primary rounded-lg shadow-sm border border-theme-border-primary">
       <h3 class="text-base md:text-lg font-semibold text-theme-text-primary p-4 md:p-6 pb-2">
-        Accuracy Evolution Over Time
+        {t('components.chart.title')}
       </h3>
 
       {/* Empty state */}
       <Show when={props.models.length === 0}>
         <div class="p-6 pt-2">
           <div class="bg-theme-bg-tertiary rounded-lg p-8 text-center">
-            <p class="text-theme-text-tertiary">No time series data available</p>
+            <p class="text-theme-text-tertiary">{t('components.chart.noData')}</p>
           </div>
         </div>
       </Show>
@@ -328,7 +351,7 @@ const AccuracyTimeSeriesChart: Component<AccuracyTimeSeriesChartProps> = (props)
             class="w-full"
             style={{ height: `${CHART_CONFIG.height}px` }}
             role="img"
-            aria-label="Line chart showing model accuracy over time"
+            aria-label={t('components.chart.ariaLabel')}
           />
         </div>
       </Show>

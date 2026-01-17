@@ -1,6 +1,7 @@
 import type { Component } from 'solid-js';
 import { createSignal, createMemo, onMount, onCleanup } from 'solid-js';
 import type { ConfidenceLevel } from '../lib/types';
+import { useI18n } from '../contexts/I18nContext';
 
 /**
  * Props for DataFreshnessIndicator component.
@@ -16,31 +17,11 @@ export interface DataFreshnessIndicatorProps {
   confidenceLevel: ConfidenceLevel;
 }
 
-/** Confidence level configuration */
-const CONFIDENCE_CONFIG: Record<ConfidenceLevel, {
-  icon: string;
-  colorClass: string;
-  title: string;
-  message: string;
-}> = {
-  validated: {
-    icon: '✅',
-    colorClass: 'text-status-success-text',
-    title: 'Validated Data',
-    message: 'Metrics are statistically reliable (90+ days)',
-  },
-  preliminary: {
-    icon: '🔶',
-    colorClass: 'text-status-warning-text',
-    title: 'Preliminary Data',
-    message: 'Results will stabilize with more data (30-89 days)',
-  },
-  insufficient: {
-    icon: '⚠️',
-    colorClass: 'text-status-error-text',
-    title: 'Insufficient Data',
-    message: 'Collect more data for reliable metrics (<30 days)',
-  },
+/** Confidence level icon/color configuration */
+const CONFIDENCE_ICONS: Record<ConfidenceLevel, { icon: string; colorClass: string }> = {
+  validated: { icon: '✅', colorClass: 'text-status-success-text' },
+  preliminary: { icon: '🔶', colorClass: 'text-status-warning-text' },
+  insufficient: { icon: '⚠️', colorClass: 'text-status-error-text' },
 };
 
 /** Milliseconds per time unit */
@@ -49,42 +30,13 @@ const MS_PER_HOUR = 3600000;
 const MS_PER_DAY = 86400000;
 
 /**
- * Format a date as an absolute date string.
- */
-function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(date);
-}
-
-/**
- * Format the time difference as a relative string.
- * Handles edge cases including future dates (negative difference).
- */
-function formatRelativeTime(date: Date, now: Date): string {
-  const diffMs = now.getTime() - date.getTime();
-
-  // Handle future dates (negative difference) - treat as "just now"
-  if (diffMs < 0) return 'just now';
-
-  const diffMins = Math.floor(diffMs / MS_PER_MINUTE);
-  const diffHours = Math.floor(diffMs / MS_PER_HOUR);
-  const diffDays = Math.floor(diffMs / MS_PER_DAY);
-
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-  return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
-}
-
-/**
  * DataFreshnessIndicator component.
  * Displays data freshness information including last update, sample size,
  * date range, and confidence level.
  */
 const DataFreshnessIndicator: Component<DataFreshnessIndicatorProps> = (props) => {
+  const { t, language } = useI18n();
+
   // Signal for current time - updates every minute for relative time display
   const [now, setNow] = createSignal(new Date());
 
@@ -104,16 +56,74 @@ const DataFreshnessIndicator: Component<DataFreshnessIndicatorProps> = (props) =
   });
 
   // Get confidence configuration
-  const confidenceInfo = createMemo(() => CONFIDENCE_CONFIG[props.confidenceLevel]);
+  const confidenceInfo = createMemo(() => CONFIDENCE_ICONS[props.confidenceLevel]);
+
+  // Locale-aware date formatting
+  const formatDate = (date: Date): string => {
+    const locale = language() === 'fr' ? 'fr-FR' : 'en-US';
+    return new Intl.DateTimeFormat(locale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }).format(date);
+  };
+
+  // Locale-aware relative time formatting
+  const formatRelativeTime = (date: Date, currentNow: Date): string => {
+    const diffMs = currentNow.getTime() - date.getTime();
+
+    // Handle future dates (negative difference) - treat as "just now"
+    if (diffMs < 0) return t('components.dataInfo.justNow');
+
+    const diffMins = Math.floor(diffMs / MS_PER_MINUTE);
+    const diffHours = Math.floor(diffMs / MS_PER_HOUR);
+    const diffDays = Math.floor(diffMs / MS_PER_DAY);
+
+    if (diffMins < 1) return t('components.dataInfo.justNow');
+    if (diffMins < 60) {
+      return diffMins === 1
+        ? t('components.dataInfo.minuteAgo', { count: diffMins })
+        : t('components.dataInfo.minutesAgo', { count: diffMins });
+    }
+    if (diffHours < 24) {
+      return diffHours === 1
+        ? t('components.dataInfo.hourAgo', { count: diffHours })
+        : t('components.dataInfo.hoursAgo', { count: diffHours });
+    }
+    return diffDays === 1
+      ? t('components.dataInfo.dayAgo', { count: diffDays })
+      : t('components.dataInfo.daysAgo', { count: diffDays });
+  };
+
+  // Get confidence level translation keys
+  const confidenceTitle = createMemo(() => {
+    switch (props.confidenceLevel) {
+      case 'validated': return t('components.dataInfo.validated');
+      case 'preliminary': return t('components.dataInfo.preliminary');
+      case 'insufficient': return t('components.dataInfo.insufficient');
+    }
+  });
+
+  const confidenceMessage = createMemo(() => {
+    switch (props.confidenceLevel) {
+      case 'validated': return t('components.dataInfo.validatedMsg');
+      case 'preliminary': return t('components.dataInfo.preliminaryMsg');
+      case 'insufficient': return t('components.dataInfo.insufficientMsg');
+    }
+  });
 
   return (
     <div class="bg-theme-bg-primary border border-theme-border-primary rounded-lg p-6 shadow-sm">
-      <h4 class="text-base font-semibold text-theme-text-primary mb-4">Data Information</h4>
+      <h4 class="text-base font-semibold text-theme-text-primary mb-4">
+        {t('components.dataInfo.title')}
+      </h4>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Last Updated */}
         <div>
-          <p class="text-xs text-theme-text-tertiary mb-1">Last Updated</p>
+          <p class="text-xs text-theme-text-tertiary mb-1">
+            {t('components.dataInfo.lastUpdated')}
+          </p>
           <p class="text-sm font-medium text-theme-text-primary">
             {formatRelativeTime(props.lastUpdate, now())}
           </p>
@@ -124,23 +134,27 @@ const DataFreshnessIndicator: Component<DataFreshnessIndicatorProps> = (props) =
 
         {/* Sample Size */}
         <div>
-          <p class="text-xs text-theme-text-tertiary mb-1">Sample Size</p>
+          <p class="text-xs text-theme-text-tertiary mb-1">
+            {t('components.dataInfo.sampleSize')}
+          </p>
           <p class="text-sm font-medium text-theme-text-primary">
-            {props.sampleSize.toLocaleString()} measurements
+            {props.sampleSize.toLocaleString()} {t('components.dataInfo.measurements')}
           </p>
           <p class="text-xs text-theme-text-tertiary">
-            {daysOfData()} days of data
+            {t('components.dataInfo.daysOfData', { days: daysOfData() })}
           </p>
         </div>
 
         {/* Data Range */}
         <div>
-          <p class="text-xs text-theme-text-tertiary mb-1">Data Range</p>
+          <p class="text-xs text-theme-text-tertiary mb-1">
+            {t('components.dataInfo.dataRange')}
+          </p>
           <p class="text-sm font-medium text-theme-text-primary">
             {formatDate(props.dateRange.start)}
           </p>
           <p class="text-xs text-theme-text-tertiary">
-            to {formatDate(props.dateRange.end)}
+            {t('components.dataInfo.to')} {formatDate(props.dateRange.end)}
           </p>
         </div>
       </div>
@@ -150,8 +164,8 @@ const DataFreshnessIndicator: Component<DataFreshnessIndicatorProps> = (props) =
         <div class={`flex items-center gap-2 ${confidenceInfo().colorClass}`}>
           <div class="text-lg">{confidenceInfo().icon}</div>
           <div>
-            <p class="text-sm font-medium">{confidenceInfo().title}</p>
-            <p class="text-xs">{confidenceInfo().message}</p>
+            <p class="text-sm font-medium">{confidenceTitle()}</p>
+            <p class="text-xs">{confidenceMessage()}</p>
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import type { Component } from 'solid-js';
 import { For } from 'solid-js';
+import { useI18n } from '../contexts/I18nContext';
 
 /**
  * Props for HorizonSelector component.
@@ -16,6 +17,7 @@ export interface HorizonSelectorProps {
  * Uses Solid.js patterns: props object access, <For> component.
  */
 const HorizonSelector: Component<HorizonSelectorProps> = (props) => {
+  const { t } = useI18n();
   const groupId = 'horizon-selector';
 
   return (
@@ -24,7 +26,7 @@ const HorizonSelector: Component<HorizonSelectorProps> = (props) => {
         id={`${groupId}-label`}
         class="block text-sm font-medium text-theme-text-secondary mb-2"
       >
-        Forecast Horizon
+        {t('selectors.forecastHorizon')}
       </label>
       <div
         role="group"
