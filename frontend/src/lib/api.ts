@@ -17,8 +17,8 @@ import type {
   CollectionResponse,
 } from './types';
 
-/** Base API URL from environment or default to local backend */
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+/** Base API URL from environment or default to same origin (empty string for relative URLs) */
+const API_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 /** Default request timeout in milliseconds (30 seconds) */
 const DEFAULT_TIMEOUT_MS = 30000;
