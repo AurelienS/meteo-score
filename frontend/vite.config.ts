@@ -14,7 +14,17 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
-    sourcemap: true,
+    minify: 'esbuild',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['solid-js', '@solidjs/router'],
+          d3: ['d3'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
   },
   resolve: {
     conditions: ['development', 'browser'],

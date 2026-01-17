@@ -71,7 +71,7 @@ development_status:
   epic-3-retrospective: optional
 
   # Epic 4: Model Comparison Web Visualization Platform
-  epic-4: in-progress
+  epic-4: done
   4-1-solid-js-frontend-project-setup: done
   4-2-site-selection-and-parameter-controls: done
   4-3-model-comparison-table-component: done
@@ -81,5 +81,5 @@ development_status:
   4-7-responsive-layout-and-mobile-optimization: done
   4-8-api-integration-with-error-handling: done
   4-9-methodology-and-transparency-page: done
-  4-10-production-build-and-docker-integration: backlog
+  4-10-production-build-and-docker-integration: done
   epic-4-retrospective: optional
