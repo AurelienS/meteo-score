@@ -99,4 +99,5 @@ development_status:
   6-5-ui-micro-animations: backlog
   6-6-theme-contrast-fixes: done
   6-7-raw-forecast-observation-tooltip: done
+  6-8-fix-data-collection-pipeline: in-progress
   epic-6-retrospective: optional
