@@ -186,6 +186,31 @@ npm run format         # Prettier
 npm run type-check     # TypeScript check
 ```
 
+## Deployment
+
+The application is deployed using a branch-based workflow. Pushing to the `prod` branch triggers deployment to production.
+
+### Deploy to Production
+
+```bash
+# Ensure you're on main and up to date
+git checkout main
+git pull origin main
+
+# Push main to prod branch
+git push origin main:prod
+```
+
+This will:
+1. Push all commits from `main` to the `prod` branch
+2. Trigger the production deployment pipeline
+
+### Deployment Notes
+
+- Always ensure `main` is stable and tested before deploying
+- The `prod` branch should only be updated via pushes from `main`
+- Monitor the deployment logs after pushing to verify successful deployment
+
 ## License
 
 [Add your license here]
