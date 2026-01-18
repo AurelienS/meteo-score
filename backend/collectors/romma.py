@@ -345,7 +345,9 @@ class ROMMaCollector(BaseCollector):
     def _extract_wind_speed(self, html: str) -> Decimal | None:
         """Extract wind speed from HTML.
 
-        Looks for pattern: "Moyen sur 10min : XX km/h"
+        Looks for patterns:
+        - "Moyen sur 10min : XX km/h" (plain text)
+        - "Moyen sur 10min : <span...>XX</span>" (HTML wrapped)
 
         Args:
             html: Raw HTML content.
@@ -353,9 +355,15 @@ class ROMMaCollector(BaseCollector):
         Returns:
             Wind speed in km/h as Decimal, or None if not found.
         """
-        # Pattern: "Moyen sur 10min : 25 km/h" or "Moyen sur 10min : 12.5 km/h"
-        pattern = r"Moyen sur 10min\s*:\s*([\d.]+)\s*km/h"
-        match = re.search(pattern, html, re.IGNORECASE)
+        # Try HTML pattern first: value wrapped in span tags
+        # "Moyen sur 10min : <span class="bigTexte">5</span>"
+        pattern_html = r'Moyen sur 10min\s*:\s*<span[^>]*>([\d.]+)</span>'
+        match = re.search(pattern_html, html, re.IGNORECASE)
+
+        if not match:
+            # Try plain text pattern: "Moyen sur 10min : 25 km/h"
+            pattern_plain = r"Moyen sur 10min\s*:\s*([\d.]+)\s*km/h"
+            match = re.search(pattern_plain, html, re.IGNORECASE)
 
         if match:
             try:
@@ -369,7 +377,9 @@ class ROMMaCollector(BaseCollector):
     def _extract_wind_direction(self, html: str) -> Decimal | None:
         """Extract wind direction from HTML and convert to degrees.
 
-        Looks for pattern: "Direction : N/S/E/W/NE/etc"
+        Looks for patterns:
+        - "Direction : N/S/E/W/NE/etc" (plain text)
+        - "Direction : <span...>NNO</span>" (HTML wrapped)
         Converts cardinal directions to degrees.
 
         Args:
@@ -378,12 +388,20 @@ class ROMMaCollector(BaseCollector):
         Returns:
             Wind direction in degrees as Decimal, or None if not found.
         """
-        # Pattern: "Direction : NE" or "Direction : N"
-        pattern = r"Direction\s*:\s*([NSEW]{1,3})\b"
-        match = re.search(pattern, html, re.IGNORECASE)
+        # Try HTML pattern first: value wrapped in span tags
+        # "Direction : <span class="smallTexte">NNO</span>"
+        pattern_html = r'Direction\s*:\s*<span[^>]*>([NSEOEW]{1,3})</span>'
+        match = re.search(pattern_html, html, re.IGNORECASE)
+
+        if not match:
+            # Try plain text pattern: "Direction : NE" or "Direction : N"
+            pattern_plain = r"Direction\s*:\s*([NSEW]{1,3})\b"
+            match = re.search(pattern_plain, html, re.IGNORECASE)
 
         if match:
             cardinal = match.group(1).upper()
+            # Convert French O (Ouest) to W (West)
+            cardinal = cardinal.replace("O", "W")
             if cardinal in self.CARDINAL_TO_DEGREES:
                 return self.CARDINAL_TO_DEGREES[cardinal]
             else:
@@ -430,7 +448,9 @@ class ROMMaCollector(BaseCollector):
     def _parse_observation_time(self, html: str) -> datetime | None:
         """Parse observation timestamp from HTML.
 
-        Looks for pattern: "le DD Month YYYY à HH:MM"
+        Looks for patterns:
+        - "le DD Month YYYY à HH:MM" (old format)
+        - "le DD Month YYYY\\s+HH:MM" (new format, whitespace separated)
 
         Args:
             html: Raw HTML content.
@@ -438,9 +458,15 @@ class ROMMaCollector(BaseCollector):
         Returns:
             Timezone-aware datetime or None if not found.
         """
-        # Pattern: "le 12 Janvier 2026 à 14:30"
-        pattern = r"le\s+(\d{1,2})\s+(\w+)\s+(\d{4})\s+à\s+(\d{1,2}):(\d{2})"
-        match = re.search(pattern, html, re.IGNORECASE)
+        # Try new format first: "le 18 Janvier 2026                17:01"
+        # Date and time separated by whitespace (no "à")
+        pattern_new = r"le\s+(\d{1,2})\s+(\w+)\s+(\d{4})\s+(\d{1,2}):(\d{2})"
+        match = re.search(pattern_new, html, re.IGNORECASE)
+
+        if not match:
+            # Try old format: "le 12 Janvier 2026 à 14:30"
+            pattern_old = r"le\s+(\d{1,2})\s+(\w+)\s+(\d{4})\s+à\s+(\d{1,2}):(\d{2})"
+            match = re.search(pattern_old, html, re.IGNORECASE)
 
         if match:
             try:

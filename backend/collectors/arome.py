@@ -177,16 +177,16 @@ class AROMECollector(BaseCollector):
                 logger.warning(f"Empty GRIB2 data received for site {site_id}")
                 return []
 
-            # Parse GRIB2 to xarray dataset
-            dataset = self._parse_grib2_bytes(grib2_bytes)
-            if dataset is None:
+            # Parse GRIB2 to xarray datasets (wind and temp separately)
+            datasets = self._parse_grib2_bytes(grib2_bytes)
+            if datasets is None:
                 logger.warning(f"Failed to parse GRIB2 data for site {site_id}")
                 return []
 
             try:
-                # Extract forecast data
+                # Extract forecast data from both datasets
                 return self._parse_grib2_data(
-                    dataset=dataset,
+                    datasets=datasets,
                     site_id=site_id,
                     model_id=model_id,
                     latitude=latitude,
@@ -195,8 +195,9 @@ class AROMECollector(BaseCollector):
                     parameter_ids=parameter_ids,
                 )
             finally:
-                # Close xarray dataset to release resources
-                dataset.close()
+                # Close xarray datasets to release resources
+                for ds in datasets.values():
+                    ds.close()
 
         except (HttpClientError, RetryExhaustedError) as e:
             logger.warning(
@@ -263,24 +264,51 @@ class AROMECollector(BaseCollector):
             # Note: For GRIB2, we need raw bytes, not JSON
             return await client.get_bytes(url)
 
+    def _get_latest_run_time(self, current_time: datetime) -> datetime:
+        """Get the latest available AROME model run time.
+
+        AROME runs every 3 hours: 00, 03, 06, 09, 12, 15, 18, 21 UTC.
+        Data is typically available ~3-4 hours after run time.
+
+        Args:
+            current_time: Current UTC datetime.
+
+        Returns:
+            Latest available AROME run datetime.
+        """
+        # Round down to nearest 3-hour interval
+        hour = (current_time.hour // 3) * 3
+
+        # Go back one more interval to ensure data is available
+        # (data typically available 3-4h after run)
+        if current_time.hour - hour < 3:
+            hour = hour - 3
+            if hour < 0:
+                hour = 21
+                current_time = current_time - timedelta(days=1)
+
+        return current_time.replace(hour=hour, minute=0, second=0, microsecond=0)
+
     def _build_api_url(
         self,
         forecast_run: datetime,
         package: str = "SP1",
-        time_range: str = "00H24H",
+        time_range: str = "00H06H",
     ) -> str:
         """Build API URL for GRIB2 download.
 
         Args:
             forecast_run: Forecast model run datetime.
             package: AROME package (SP1, SP2, etc.).
-            time_range: Forecast time range (e.g., "00H24H").
+            time_range: Forecast time range (e.g., "00H06H", "06H12H").
+                        Note: "00H24H" doesn't work - must use smaller ranges.
 
         Returns:
             Complete API URL.
         """
-        # Format reference time as ISO 8601
-        ref_time = forecast_run.strftime("%Y-%m-%dT%H:%M:%SZ")
+        # Snap to latest valid AROME run time
+        valid_run = self._get_latest_run_time(forecast_run)
+        ref_time = valid_run.strftime("%Y-%m-%dT%H:%M:%SZ")
 
         return (
             f"{self.API_ENDPOINT}/{package}/productARO"
@@ -301,21 +329,28 @@ class AROMECollector(BaseCollector):
         }
 
         if self._api_token:
-            headers["Authorization"] = f"Bearer {self._api_token}"
+            # Météo-France API uses 'apikey' header, not Bearer token
+            headers["apikey"] = self._api_token
 
         return headers
 
-    def _parse_grib2_bytes(self, grib2_bytes: bytes) -> xr.Dataset | None:
-        """Parse GRIB2 bytes into xarray Dataset.
+    def _parse_grib2_bytes(self, grib2_bytes: bytes) -> dict[str, xr.Dataset] | None:
+        """Parse GRIB2 bytes into xarray Datasets.
+
+        Opens the file separately for different height levels since cfgrib
+        cannot combine variables at different heights (u10/v10 at 10m, t2m at 2m).
 
         Args:
             grib2_bytes: Raw GRIB2 file bytes.
 
         Returns:
-            xarray Dataset or None if parsing fails.
+            Dictionary of datasets by height level, or None if parsing fails.
         """
         if not grib2_bytes:
             return None
+
+        datasets = {}
+        temp_path = None
 
         try:
             # Write bytes to temporary file (cfgrib requires file path)
@@ -323,30 +358,61 @@ class AROMECollector(BaseCollector):
                 f.write(grib2_bytes)
                 temp_path = f.name
 
+            # Open wind components (10m height)
             try:
-                # Open with cfgrib engine
-                # Use filter_by_keys to get surface level data
-                ds = xr.open_dataset(
+                ds_wind = xr.open_dataset(
                     temp_path,
                     engine="cfgrib",
                     backend_kwargs={
                         "filter_by_keys": {
                             "typeOfLevel": "heightAboveGround",
-                        }
+                            "level": 10,
+                        },
+                        "errors": "ignore",
                     },
                 )
-                return ds
-            finally:
-                # Clean up temp file
-                Path(temp_path).unlink(missing_ok=True)
+                # Load into memory so file can be deleted
+                datasets["wind"] = ds_wind.load()
+                ds_wind.close()
+            except Exception as e:
+                logger.warning(f"Failed to parse wind data from GRIB2: {e}")
+
+            # Open temperature (2m height)
+            try:
+                ds_temp = xr.open_dataset(
+                    temp_path,
+                    engine="cfgrib",
+                    backend_kwargs={
+                        "filter_by_keys": {
+                            "typeOfLevel": "heightAboveGround",
+                            "level": 2,
+                        },
+                        "errors": "ignore",
+                    },
+                )
+                # Load into memory so file can be deleted
+                datasets["temp"] = ds_temp.load()
+                ds_temp.close()
+            except Exception as e:
+                logger.warning(f"Failed to parse temperature data from GRIB2: {e}")
+
+            if not datasets:
+                logger.warning("No datasets could be parsed from GRIB2")
+                return None
+
+            return datasets
 
         except Exception as e:
             logger.warning(f"Failed to parse GRIB2 data: {e}")
             return None
+        finally:
+            # Clean up temp file
+            if temp_path:
+                Path(temp_path).unlink(missing_ok=True)
 
     def _parse_grib2_data(
         self,
-        dataset: xr.Dataset,
+        datasets: dict[str, xr.Dataset],
         site_id: int,
         model_id: int,
         latitude: float,
@@ -354,10 +420,10 @@ class AROMECollector(BaseCollector):
         forecast_run: datetime,
         parameter_ids: dict[str, int] | None = None,
     ) -> list[ForecastData]:
-        """Parse xarray dataset into ForecastData objects.
+        """Parse xarray datasets into ForecastData objects.
 
         Args:
-            dataset: xarray Dataset from GRIB2 file.
+            datasets: Dictionary of xarray Datasets (wind at 10m, temp at 2m).
             site_id: Database ID of the site.
             model_id: Database ID of the model.
             latitude: Site latitude for interpolation.
@@ -373,65 +439,120 @@ class AROMECollector(BaseCollector):
 
         results: list[ForecastData] = []
 
-        # Check if dataset has any data
-        if not dataset.data_vars:
-            logger.warning("Empty dataset - no data variables found")
-            return []
+        # Process wind data (10m level)
+        if "wind" in datasets:
+            wind_ds = datasets["wind"]
+            if wind_ds.data_vars:
+                wind_site_data = self._interpolate_to_site(wind_ds, latitude, longitude)
+                if wind_site_data is not None:
+                    results.extend(
+                        self._process_wind_dataset(
+                            site_data=wind_site_data,
+                            site_id=site_id,
+                            model_id=model_id,
+                            forecast_run=forecast_run,
+                            parameter_ids=parameter_ids,
+                        )
+                    )
 
-        # Interpolate to site location
-        site_data = self._interpolate_to_site(dataset, latitude, longitude)
-        if site_data is None:
-            logger.warning(
-                f"Failed to interpolate data to site ({latitude}, {longitude})"
-            )
-            return []
+        # Process temperature data (2m level)
+        if "temp" in datasets:
+            temp_ds = datasets["temp"]
+            if temp_ds.data_vars:
+                temp_site_data = self._interpolate_to_site(temp_ds, latitude, longitude)
+                if temp_site_data is not None:
+                    results.extend(
+                        self._process_temp_dataset(
+                            site_data=temp_site_data,
+                            site_id=site_id,
+                            model_id=model_id,
+                            forecast_run=forecast_run,
+                            parameter_ids=parameter_ids,
+                        )
+                    )
 
-        # Get time coordinate
+        return results
+
+    def _process_wind_dataset(
+        self,
+        site_data: xr.Dataset,
+        site_id: int,
+        model_id: int,
+        forecast_run: datetime,
+        parameter_ids: dict[str, int],
+    ) -> list[ForecastData]:
+        """Process wind dataset to extract forecast data."""
+        results: list[ForecastData] = []
+
         time_coord = self._get_time_coordinate(site_data)
         if time_coord is None:
-            logger.warning("No time coordinate found in dataset")
             return []
 
-        # Process each time step
         for time_val in time_coord.values:
             try:
-                # Convert numpy datetime64 to Python datetime
                 valid_time = self._numpy_to_datetime(time_val)
                 if valid_time is None:
                     continue
 
-                # Calculate horizon (hours from forecast_run to valid_time)
-                horizon = int((valid_time - forecast_run).total_seconds() / 3600)
+                # Use the valid run time for horizon calculation
+                valid_run = self._get_latest_run_time(forecast_run)
+                horizon = int((valid_time - valid_run).total_seconds() / 3600)
 
-                # Extract wind data if available
                 wind_results = self._extract_wind_data(
                     data=site_data,
                     time_val=time_val,
                     site_id=site_id,
                     model_id=model_id,
                     parameter_ids=parameter_ids,
-                    forecast_run=forecast_run,
+                    forecast_run=valid_run,
                     valid_time=valid_time,
                     horizon=horizon,
                 )
                 results.extend(wind_results)
+            except Exception as e:
+                logger.warning(f"Error processing wind time step {time_val}: {e}")
+                continue
 
-                # Extract temperature if available
+        return results
+
+    def _process_temp_dataset(
+        self,
+        site_data: xr.Dataset,
+        site_id: int,
+        model_id: int,
+        forecast_run: datetime,
+        parameter_ids: dict[str, int],
+    ) -> list[ForecastData]:
+        """Process temperature dataset to extract forecast data."""
+        results: list[ForecastData] = []
+
+        time_coord = self._get_time_coordinate(site_data)
+        if time_coord is None:
+            return []
+
+        for time_val in time_coord.values:
+            try:
+                valid_time = self._numpy_to_datetime(time_val)
+                if valid_time is None:
+                    continue
+
+                valid_run = self._get_latest_run_time(forecast_run)
+                horizon = int((valid_time - valid_run).total_seconds() / 3600)
+
                 temp_result = self._extract_temperature(
                     data=site_data,
                     time_val=time_val,
                     site_id=site_id,
                     model_id=model_id,
                     parameter_ids=parameter_ids,
-                    forecast_run=forecast_run,
+                    forecast_run=valid_run,
                     valid_time=valid_time,
                     horizon=horizon,
                 )
                 if temp_result:
                     results.append(temp_result)
-
             except Exception as e:
-                logger.warning(f"Error processing time step {time_val}: {e}")
+                logger.warning(f"Error processing temp time step {time_val}: {e}")
                 continue
 
         return results

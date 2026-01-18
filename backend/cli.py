@@ -8,10 +8,15 @@ Usage:
     python -m cli stats         # Show database statistics
     python -m cli collect-forecasts   # Trigger forecast collection
     python -m cli collect-observations # Trigger observation collection
+    python -m cli smoke-test    # Run smoke test of data collection pipeline
+    python -m cli smoke-test --dry-run  # Test without persisting to database
+    python -m cli smoke-test --verbose  # Show detailed output
+    python -m cli smoke-test --site "Passy Plaine Joux"  # Test specific site
 
 From Docker:
     docker-compose exec backend python -m cli seed
     docker-compose exec backend python -m cli stats
+    docker-compose exec backend python -m cli smoke-test
 """
 
 import argparse
@@ -135,6 +140,55 @@ async def collect_observations() -> None:
         sys.exit(1)
 
 
+async def run_smoke_test_cmd(
+    dry_run: bool = False,
+    verbose: bool = False,
+    site: str | None = None,
+) -> None:
+    """Run smoke test of data collection pipeline.
+
+    Args:
+        dry_run: If True, don't persist to database.
+        verbose: If True, show detailed output.
+        site: Optional site name to test.
+    """
+    from tests.smoke_test import (
+        format_smoke_test_output,
+        get_site_config_for_test,
+        run_smoke_test,
+    )
+
+    print("Running smoke test...")
+
+    # Get site config for display
+    site_config = await get_site_config_for_test(site)
+    if not site_config:
+        if site:
+            print(f"Error: Site '{site}' not found in database")
+        else:
+            print("Error: No sites configured in database. Run 'python -m cli seed' first.")
+        sys.exit(1)
+
+    site_name = site_config["name"]
+
+    # Run the smoke test
+    result = await run_smoke_test(
+        dry_run=dry_run,
+        verbose=verbose,
+        site_name=site,
+    )
+
+    # Format and print output
+    output = format_smoke_test_output(result, site_name, verbose)
+    print(output)
+
+    # Exit with appropriate code
+    if result.status == "failed":
+        sys.exit(1)
+    elif result.status == "partial":
+        sys.exit(2)
+
+
 def main() -> None:
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -163,6 +217,27 @@ def main() -> None:
     subparsers.add_parser("collect-forecasts", help="Trigger forecast collection")
     subparsers.add_parser("collect-observations", help="Trigger observation collection")
 
+    # Smoke test command
+    smoke_parser = subparsers.add_parser(
+        "smoke-test",
+        help="Run smoke test of data collection pipeline",
+    )
+    smoke_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Test collection without persisting to database",
+    )
+    smoke_parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Show detailed output",
+    )
+    smoke_parser.add_argument(
+        "--site",
+        type=str,
+        help="Site name to test (default: first configured site)",
+    )
+
     args = parser.parse_args()
 
     if not args.command:
@@ -184,6 +259,12 @@ def main() -> None:
         asyncio.run(collect_forecasts())
     elif args.command == "collect-observations":
         asyncio.run(collect_observations())
+    elif args.command == "smoke-test":
+        asyncio.run(run_smoke_test_cmd(
+            dry_run=args.dry_run,
+            verbose=args.verbose,
+            site=args.site,
+        ))
     else:
         parser.print_help()
         sys.exit(1)

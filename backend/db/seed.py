@@ -54,9 +54,9 @@ SITES = [
         "longitude": Decimal("6.700000"),
         "altitude": 1360,
         # Observation beacons (primary and optional backup)
-        "romma_beacon_id": 21,  # Primary ROMMA station near Chamonix
+        "romma_beacon_id": 241,  # Passy Plaine Joux ROMMA station
         "romma_beacon_id_backup": None,  # No backup configured yet
-        "ffvl_beacon_id": 67,  # Primary FFVL balise (Le Semnoz placeholder)
+        "ffvl_beacon_id": 3710,  # Passy Plaine Batistock FFVL beacon
         "ffvl_beacon_id_backup": None,  # No backup configured yet
     },
 ]

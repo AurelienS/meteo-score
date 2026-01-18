@@ -344,7 +344,9 @@ class FFVLCollector(BaseCollector):
     def _extract_wind_speed(self, html: str) -> Decimal | None:
         """Extract average wind speed from HTML.
 
-        Looks for pattern: "Vitesse : **XX km/h**" or "Vitesse : <b>XX km/h</b>"
+        Looks for patterns:
+        - "Vitesse :</td><td...><b><big><font...>XX km/h</font>" (new nested format)
+        - "Vitesse : <b>XX km/h</b>" or "Vitesse : **XX km/h**" (old format)
 
         Note: FFVL pages show multiple wind speeds (avg, min, max) but we only
         extract the FIRST match (average). This is intentional - for deviation
@@ -364,9 +366,15 @@ class FFVLCollector(BaseCollector):
             if re.search(warning_pattern, html, re.IGNORECASE):
                 return None
 
-        # Pattern: "Vitesse : <b>33 km/h</b>" or "Vitesse : **33 km/h**"
-        pattern = r"Vitesse\s*:\s*(?:<b>|\*\*)\s*([\d.]+)\s*km/h"
-        match = re.search(pattern, html, re.IGNORECASE)
+        # Pattern 1 (new format): nested HTML tags
+        # "Vitesse :</td><td class="valeur"><b><big><font...>2 km/h</font>"
+        pattern_nested = r'Vitesse\s*:</td><td[^>]*>.*?>([\d.]+)\s*km/h'
+        match = re.search(pattern_nested, html, re.IGNORECASE | re.DOTALL)
+
+        if not match:
+            # Pattern 2 (old format): "Vitesse : <b>33 km/h</b>" or "Vitesse : **33 km/h**"
+            pattern_simple = r"Vitesse\s*:\s*(?:<b>|\*\*)\s*([\d.]+)\s*km/h"
+            match = re.search(pattern_simple, html, re.IGNORECASE)
 
         if match:
             try:
@@ -381,8 +389,9 @@ class FFVLCollector(BaseCollector):
         """Extract wind direction from HTML and convert to degrees.
 
         Looks for patterns:
-        1. "Direction : <b>SO : 224°</b>" - cardinal with degrees (preferred)
-        2. "Direction : <b>SO</b>" - cardinal only (fallback using FRENCH_CARDINAL_TO_DEGREES)
+        1. Nested HTML: "Direction :</td><td...>SE : 135°</font>" (new format)
+        2. "Direction : <b>SO : 224°</b>" - cardinal with degrees
+        3. "Direction : <b>SO</b>" - cardinal only (fallback)
 
         Args:
             html: Raw HTML content.
@@ -396,7 +405,19 @@ class FFVLCollector(BaseCollector):
             if re.search(warning_pattern, html, re.IGNORECASE):
                 return None
 
-        # Pattern 1: "Direction : <b>SO : 224°</b>" - extract the degrees part
+        # Pattern 1 (new nested format): extract degrees from nested HTML
+        # "Direction :</td><td class="valeur"><b><big><font...>SE : 135°</font>"
+        pattern_nested = r'Direction\s*:</td><td[^>]*>.*?([A-Z]{1,3})\s*:\s*(\d+)°'
+        match = re.search(pattern_nested, html, re.IGNORECASE | re.DOTALL)
+
+        if match:
+            try:
+                degrees = match.group(2)
+                return Decimal(degrees)
+            except Exception:
+                pass
+
+        # Pattern 2: "Direction : <b>SO : 224°</b>" - extract the degrees part
         pattern_with_degrees = r"Direction\s*:\s*(?:<b>|\*\*)?\s*([A-Z]{1,3})\s*:\s*(\d+)°"
         match = re.search(pattern_with_degrees, html, re.IGNORECASE)
 
@@ -408,7 +429,7 @@ class FFVLCollector(BaseCollector):
             except Exception:
                 pass
 
-        # Pattern 2 (fallback): "Direction : <b>SO</b>" - cardinal only
+        # Pattern 3 (fallback): "Direction : <b>SO</b>" - cardinal only
         pattern_cardinal_only = r"Direction\s*:\s*(?:<b>|\*\*)?\s*([A-Z]{1,3})\s*(?:</b>|\*\*)"
         match_cardinal = re.search(pattern_cardinal_only, html, re.IGNORECASE)
 
