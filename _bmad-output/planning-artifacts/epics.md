@@ -4223,3 +4223,78 @@ curl http://localhost/
 - [ ] No janky or laggy animations
 - [ ] Animation duration consistent (design tokens)
 
+### Story 6.9: AROME Multi-Site Optimization & Forecast Horizon Management
+
+**As a** paragliding pilot checking forecasts,
+**I want** AROME forecasts to cover the full 36-hour horizon and be collected efficiently for multiple sites,
+**So that** I can compare AROME accuracy at different forecast horizons (H+6, H+12, H+24, H+36) and the system can scale to 50+ sites.
+
+#### Problem Statement:
+
+Critical issues in AROME collector:
+1. **Incomplete horizons**: Only downloads `00H06H` (hours 0-6), missing hours 7-36
+2. **Wrong time range format**: Code used `06H12H` (404 error), correct is `07H12H`
+3. **Inefficient multi-site**: Downloads one GRIB per site (~60MB each)
+4. **No fallback**: If Météo-France API fails, no alternative
+5. **No multi-run for fair comparison**: Need multiple runs to compare H+6 vs H+12 vs H+24
+
+#### Acceptance Criteria:
+
+**Given** the AROME collector runs
+**When** it downloads forecast data
+**Then** it downloads all 6 time ranges: `00H06H`, `07H12H`, `13H18H`, `19H24H`, `25H30H`, `31H36H`
+**And** forecast data covers hours 0-36
+
+**Given** there are N sites configured
+**When** forecast collection runs
+**Then** only 6 GRIB files are downloaded total (one per time range)
+**And** data is extracted for all N sites via coordinate interpolation
+
+**Given** we want to compare accuracy at different horizons (H+6, H+12, H+24, H+36)
+**When** collecting forecasts
+**Then** multiple runs are collected per day (00h, 06h, 12h, 18h UTC)
+**And** both AROME and Meteo-Parapente use the same run schedule for fair comparison
+**And** accuracy comparison groups forecasts by (observation_time, horizon) across models
+
+**Given** the Météo-France API fails
+**When** AROME collection is attempted
+**Then** the system falls back to scraping Meteociel.fr for AROME data
+
+**Given** a user visits the methodology page
+**When** they read the data collection section
+**Then** they understand what H+6, H+12, H+24, H+36 means
+**And** they understand how models are compared fairly at same horizons
+
+#### Implementation Notes:
+
+**GRIB Time Range Format (Météo-France API):**
+- Ranges use non-contiguous boundaries: `00H06H`, `07H12H` (NOT `06H12H`), `13H18H`, etc.
+- Maximum 36h at 0.025° resolution
+
+**Multi-Run Strategy for Fair Comparison:**
+```
+Observation: 12h Jan 19
+
+To get H+6:  Need run at 06h Jan 19  (12h - 06h = 6h horizon)
+To get H+12: Need run at 00h Jan 19  (12h - 00h = 12h horizon)
+To get H+24: Need run at 12h Jan 18  (24h horizon)
+To get H+36: Need run at 00h Jan 18  (36h horizon)
+```
+
+**Files to Modify:**
+- `backend/collectors/arome.py` - Multi-site bulk collection, all time ranges
+- `backend/services/data_collection.py` - Bulk collection integration
+- `backend/collectors/meteociel.py` (new) - Fallback collector
+- `frontend/src/locales/*.json` - Methodology page updates
+- `frontend/src/pages/About.tsx` - New horizon explanation section
+
+**Definition of Done:**
+- [ ] All 6 AROME time ranges download successfully (00H06H through 31H36H)
+- [ ] Multi-site: 6 GRIB downloads serve N sites (not N*6 downloads)
+- [ ] Multi-run: 4 runs/day collected (00h, 06h, 12h, 18h UTC)
+- [ ] Both AROME and Meteo-Parapente on same run schedule
+- [ ] Meteociel fallback collector implemented
+- [ ] Methodology page explains horizons and fair comparison
+- [ ] Integration tests pass with real API calls
+- [ ] Rate limit compliance (50 req/min)
+

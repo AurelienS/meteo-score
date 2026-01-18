@@ -100,4 +100,5 @@ development_status:
   6-6-theme-contrast-fixes: done
   6-7-raw-forecast-observation-tooltip: done
   6-8-fix-data-collection-pipeline: done
+  6-9-arome-multisite-forecast-horizons: ready-for-dev
   epic-6-retrospective: optional

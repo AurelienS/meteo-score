@@ -97,7 +97,12 @@
       "Bash(DATABASE_URL=\"postgresql+asyncpg://meteo_user:5mtXnKgjCV0MUDTPdfi9qo2y2Z@localhost:5432/meteo_score\" METEOFRANCE_API_TOKEN=\"eyJ4NXQiOiJZV0kxTTJZNE1qWTNOemsyTkRZeU5XTTRPV014TXpjek1UVmhNbU14T1RSa09ETXlOVEE0Tnc9PSIsImtpZCI6ImdhdGV3YXlfY2VydGlmaWNhdGVfYWxpYXMiLCJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJBdXJlbGllblNAY2FyYm9uLnN1cGVyIiwiYXBwbGljYXRpb24iOnsib3duZXIiOiJBdXJlbGllblMiLCJ0aWVyUXVvdGFUeXBlIjpudWxsLCJ0aWVyIjoiVW5saW1pdGVkIiwibmFtZSI6IkRlZmF1bHRBcHBsaWNhdGlvbiIsImlkIjoyNzQ2NCwidXVpZCI6ImE5ODI3ZjI3LWNhZGItNGQ5MS1iZGM2LTRkMjg0NDI3ZWE1MiJ9LCJpc3MiOiJodHRwczpcL1wvcG9ydGFpbC1hcGkubWV0ZW9mcmFuY2UuZnI6NDQzXC9vYXV0aDJcL3Rva2VuIiwidGllckluZm8iOnsiNTBQZXJNaW4iOnsidGllclF1b3RhVHlwZSI6InJlcXVlc3RDb3VudCIsImdyYXBoUUxNYXhDb21wbGV4aXR5IjowLCJncmFwaFFMTWF4RGVwdGgiOjAsInN0b3BPblF1b3RhUmVhY2giOnRydWUsInNwaWtlQXJyZXN0TGltaXQiOjAsInNwaWtlQXJyZXN0VW5pdCI6InNlYyJ9fSwia2V5dHlwZSI6IlBST0RVQ1RJT04iLCJzdWJzY3JpYmVkQVBJcyI6W3sic3Vic2NyaWJlclRlbmFudERvbWFpbiI6ImNhcmJvbi5zdXBlciIsIm5hbWUiOiJBUk9NRSIsImNvbnRleHQiOiJcL3B1YmxpY1wvYXJvbWVcLzEuMCIsInB1Ymxpc2hlciI6ImFkbWluX21mIiwidmVyc2lvbiI6IjEuMCIsInN1YnNjcmlwdGlvblRpZXIiOiI1MFBlck1pbiJ9LHsic3Vic2NyaWJlclRlbmFudERvbWFpbiI6ImNhcmJvbi5zdXBlciIsIm5hbWUiOiJQYXF1ZXRBUk9NRSIsImNvbnRleHQiOiJcL3ByZXZpbnVtXC9EUFBhcXVldEFST01FXC92MSIsInB1Ymxpc2hlciI6ImZyaXNib3VyZyIsInZlcnNpb24iOiJ2MSIsInN1YnNjcmlwdGlvblRpZXIiOiI1MFBlck1pbiJ9XSwiZXhwIjoxODYzMzQwMjU4LCJ0b2tlbl90eXBlIjoiYXBpS2V5IiwiaWF0IjoxNzY4NjY3NDU5LCJqdGkiOiIzNzg1YWUxYS1hZGVmLTQ2OGMtOTRmZi1hOWNjZDczZWExMGMifQ==.nzKGt154Ffks3sK5NYEmq2ZFtZOWRaAxYFLl3M9OAoCREbkpl1FQAAnaqHABtwiIUPiMHx7c6_HtdpQpUcJimSRSaLhitARqz2IT2PGwWJs4w9GhPz9ItNWKv89NsypH9wGVX5A_MPGBbyxuUkp4a9W_dAnCtqIB0NOBndNGHHupSt8hDouY97bdb3JeGpa9DdtpfOcGTlNNUskAY0jBcYAchXJPqRRxqzIyAXZwpewuRFm3qmq4sGgQ_wkbOxI3XVpQMvs383RhTB0Mev0Xzt9MdFLQdN4cBkT2q-DowENs8MKRBm90GhLoR1d14Mp4XPirvfp_zv_qli24_t5JVw==\" python3 -m cli smoke-test --dry-run)",
       "Bash(DATABASE_URL=\"postgresql+asyncpg://meteo_user:5mtXnKgjCV0MUDTPdfi9qo2y2Z@localhost:5432/meteo_score\" python3:*)",
       "Bash(DATABASE_URL=\"postgresql+asyncpg://meteo_user:5mtXnKgjCV0MUDTPdfi9qo2y2Z@localhost:5432/meteo_score\" METEOFRANCE_API_TOKEN=\"test\" python3:*)",
-      "Bash(DATABASE_URL=\"postgresql+asyncpg://meteo_user:5mtXnKgjCV0MUDTPdfi9qo2y2Z@localhost:5432/meteo_score\" python3 -m cli:*)"
+      "Bash(DATABASE_URL=\"postgresql+asyncpg://meteo_user:5mtXnKgjCV0MUDTPdfi9qo2y2Z@localhost:5432/meteo_score\" python3 -m cli:*)",
+      "Skill(bmad:bmm:workflows:create-tech-spec)",
+      "WebFetch(domain:donneespubliques.meteofrance.fr)",
+      "WebFetch(domain:www.architecture-performance.fr)",
+      "WebFetch(domain:docs.bmad-method.org)",
+      "Skill(bmad:bmm:workflows:workflow-init)"
     ],
     "deny": [],
     "ask": []
