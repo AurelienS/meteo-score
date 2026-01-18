@@ -155,6 +155,42 @@ export interface ToggleResponse {
 export interface CollectionResponse {
   status: string;
   recordsCollected: number;
+  recordsPersisted?: number;
   durationSeconds: number;
   errors?: string[];
+}
+
+/** Data statistics response */
+export interface DataStatsResponse {
+  totalForecasts: number;
+  totalObservations: number;
+  totalDeviations: number;
+  totalPairs: number;
+  totalSites: number;
+}
+
+/** Single forecast preview record */
+export interface ForecastPreviewRecord {
+  id: number;
+  site: string;
+  parameter: string;
+  valid_time: string;
+  value: number;
+  created_at: string;
+}
+
+/** Single observation preview record */
+export interface ObservationPreviewRecord {
+  id: number;
+  site: string;
+  parameter: string;
+  observation_time: string;
+  value: number;
+  created_at: string;
+}
+
+/** Data preview response */
+export interface DataPreviewResponse {
+  forecasts: Record<string, ForecastPreviewRecord[]>;
+  observations: Record<string, ObservationPreviewRecord[]>;
 }

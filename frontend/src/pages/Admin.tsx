@@ -16,6 +16,8 @@ import type {
   SchedulerJobsResponse,
   ExecutionRecord,
   ScheduledJobInfo,
+  DataStatsResponse,
+  DataPreviewResponse,
 } from '../lib/types';
 import {
   fetchAdminSchedulerStatus,
@@ -23,6 +25,8 @@ import {
   toggleScheduler,
   triggerForecastCollection,
   triggerObservationCollection,
+  fetchAdminStats,
+  fetchAdminDataPreview,
   ApiRequestError,
   NetworkError,
   TimeoutError,
@@ -180,6 +184,256 @@ function ExecutionHistoryTable(props: {
           </table>
         </div>
       </Show>
+    </div>
+  );
+}
+
+/**
+ * Data stats card component.
+ */
+function DataStatsCard(props: {
+  stats: DataStatsResponse;
+  dateRange: number | undefined;
+  onDateRangeChange: (days: number | undefined) => void;
+  labels: {
+    title: string;
+    forecasts: string;
+    observations: string;
+    deviations: string;
+    sites: string;
+    allTime: string;
+    last7Days: string;
+    last30Days: string;
+  };
+}): JSX.Element {
+  return (
+    <div
+      class="rounded-lg shadow p-4 transition-colors"
+      style={{
+        "background-color": "var(--color-surface)",
+        "border": "1px solid var(--color-border)",
+      }}
+    >
+      <div class="flex items-center justify-between mb-4">
+        <h3
+          class="text-lg font-semibold"
+          style={{ color: "var(--color-text-primary)" }}
+        >
+          {props.labels.title}
+        </h3>
+        <select
+          value={props.dateRange === undefined ? "" : String(props.dateRange)}
+          onChange={(e) => {
+            const val = e.currentTarget.value;
+            props.onDateRangeChange(val === "" ? undefined : parseInt(val, 10));
+          }}
+          class="text-sm px-2 py-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{
+            "background-color": "var(--color-bg-primary)",
+            "border": "1px solid var(--color-border)",
+            "color": "var(--color-text-primary)",
+          }}
+        >
+          <option value="">{props.labels.allTime}</option>
+          <option value="7">{props.labels.last7Days}</option>
+          <option value="30">{props.labels.last30Days}</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="text-center">
+          <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            {props.stats.totalForecasts.toLocaleString()}
+          </div>
+          <div class="text-sm" style={{ color: "var(--color-text-muted)" }}>
+            {props.labels.forecasts}
+          </div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+            {props.stats.totalObservations.toLocaleString()}
+          </div>
+          <div class="text-sm" style={{ color: "var(--color-text-muted)" }}>
+            {props.labels.observations}
+          </div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">
+            {props.stats.totalDeviations.toLocaleString()}
+          </div>
+          <div class="text-sm" style={{ color: "var(--color-text-muted)" }}>
+            {props.labels.deviations}
+          </div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">
+            {props.stats.totalSites.toLocaleString()}
+          </div>
+          <div class="text-sm" style={{ color: "var(--color-text-muted)" }}>
+            {props.labels.sites}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Data preview table component.
+ */
+function DataPreviewTable(props: {
+  preview: DataPreviewResponse;
+  labels: {
+    title: string;
+    forecastsTitle: string;
+    observationsTitle: string;
+    noData: string;
+    timestamp: string;
+    site: string;
+    parameter: string;
+    value: string;
+  };
+}): JSX.Element {
+  const forecastSources = () => Object.keys(props.preview.forecasts);
+  const observationSources = () => Object.keys(props.preview.observations);
+
+  return (
+    <div
+      class="rounded-lg shadow p-4 transition-colors"
+      style={{
+        "background-color": "var(--color-surface)",
+        "border": "1px solid var(--color-border)",
+      }}
+    >
+      <h3
+        class="text-lg font-semibold mb-4"
+        style={{ color: "var(--color-text-primary)" }}
+      >
+        {props.labels.title}
+      </h3>
+
+      {/* Forecasts Section */}
+      <div class="mb-6">
+        <h4
+          class="text-md font-medium mb-2"
+          style={{ color: "var(--color-text-secondary)" }}
+        >
+          {props.labels.forecastsTitle}
+        </h4>
+        <Show
+          when={forecastSources().length > 0}
+          fallback={
+            <p class="text-sm italic" style={{ color: "var(--color-text-muted)" }}>
+              {props.labels.noData}
+            </p>
+          }
+        >
+          <div class="space-y-4">
+            <For each={forecastSources()}>
+              {(source) => (
+                <div>
+                  <div class="text-sm font-medium mb-1 text-blue-600 dark:text-blue-400">
+                    {source}
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full text-xs">
+                      <thead>
+                        <tr style={{ "border-bottom": "1px solid var(--color-border)" }}>
+                          <th class="text-left py-1 px-2 font-medium" style={{ color: "var(--color-text-secondary)" }}>{props.labels.timestamp}</th>
+                          <th class="text-left py-1 px-2 font-medium" style={{ color: "var(--color-text-secondary)" }}>{props.labels.site}</th>
+                          <th class="text-left py-1 px-2 font-medium" style={{ color: "var(--color-text-secondary)" }}>{props.labels.parameter}</th>
+                          <th class="text-right py-1 px-2 font-medium" style={{ color: "var(--color-text-secondary)" }}>{props.labels.value}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <For each={props.preview.forecasts[source]}>
+                          {(record) => (
+                            <tr style={{ "border-bottom": "1px solid var(--color-border)" }}>
+                              <td class="py-1 px-2 font-mono" style={{ color: "var(--color-text-primary)" }}>
+                                {formatDateTime(record.valid_time)}
+                              </td>
+                              <td class="py-1 px-2" style={{ color: "var(--color-text-primary)" }}>
+                                {record.site}
+                              </td>
+                              <td class="py-1 px-2" style={{ color: "var(--color-text-primary)" }}>
+                                {record.parameter}
+                              </td>
+                              <td class="py-1 px-2 text-right font-mono" style={{ color: "var(--color-text-primary)" }}>
+                                {record.value.toFixed(1)}
+                              </td>
+                            </tr>
+                          )}
+                        </For>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </For>
+          </div>
+        </Show>
+      </div>
+
+      {/* Observations Section */}
+      <div>
+        <h4
+          class="text-md font-medium mb-2"
+          style={{ color: "var(--color-text-secondary)" }}
+        >
+          {props.labels.observationsTitle}
+        </h4>
+        <Show
+          when={observationSources().length > 0}
+          fallback={
+            <p class="text-sm italic" style={{ color: "var(--color-text-muted)" }}>
+              {props.labels.noData}
+            </p>
+          }
+        >
+          <div class="space-y-4">
+            <For each={observationSources()}>
+              {(source) => (
+                <div>
+                  <div class="text-sm font-medium mb-1 text-green-600 dark:text-green-400">
+                    {source}
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full text-xs">
+                      <thead>
+                        <tr style={{ "border-bottom": "1px solid var(--color-border)" }}>
+                          <th class="text-left py-1 px-2 font-medium" style={{ color: "var(--color-text-secondary)" }}>{props.labels.timestamp}</th>
+                          <th class="text-left py-1 px-2 font-medium" style={{ color: "var(--color-text-secondary)" }}>{props.labels.site}</th>
+                          <th class="text-left py-1 px-2 font-medium" style={{ color: "var(--color-text-secondary)" }}>{props.labels.parameter}</th>
+                          <th class="text-right py-1 px-2 font-medium" style={{ color: "var(--color-text-secondary)" }}>{props.labels.value}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <For each={props.preview.observations[source]}>
+                          {(record) => (
+                            <tr style={{ "border-bottom": "1px solid var(--color-border)" }}>
+                              <td class="py-1 px-2 font-mono" style={{ color: "var(--color-text-primary)" }}>
+                                {formatDateTime(record.observation_time)}
+                              </td>
+                              <td class="py-1 px-2" style={{ color: "var(--color-text-primary)" }}>
+                                {record.site}
+                              </td>
+                              <td class="py-1 px-2" style={{ color: "var(--color-text-primary)" }}>
+                                {record.parameter}
+                              </td>
+                              <td class="py-1 px-2 text-right font-mono" style={{ color: "var(--color-text-primary)" }}>
+                                {record.value.toFixed(1)}
+                              </td>
+                            </tr>
+                          )}
+                        </For>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </For>
+          </div>
+        </Show>
+      </div>
     </div>
   );
 }
@@ -409,6 +663,9 @@ export default function Admin(): JSX.Element {
   // State signals
   const [status, setStatus] = createSignal<AdminSchedulerStatusResponse | null>(null);
   const [jobs, setJobs] = createSignal<SchedulerJobsResponse | null>(null);
+  const [stats, setStats] = createSignal<DataStatsResponse | null>(null);
+  const [dataPreview, setDataPreview] = createSignal<DataPreviewResponse | null>(null);
+  const [statsDateRange, setStatsDateRange] = createSignal<number | undefined>(undefined);
   const [error, setError] = createSignal<string | null>(null);
   const [isLoadingStatus, setIsLoadingStatus] = createSignal(true);
   const [isTogglingScheduler, setIsTogglingScheduler] = createSignal(false);
@@ -460,12 +717,16 @@ export default function Admin(): JSX.Element {
   async function fetchData(): Promise<void> {
     setError(null);
     try {
-      const [statusData, jobsData] = await Promise.all([
+      const [statusData, jobsData, statsData, previewData] = await Promise.all([
         fetchAdminSchedulerStatus(),
         fetchAdminSchedulerJobs(),
+        fetchAdminStats(statsDateRange()),
+        fetchAdminDataPreview(),
       ]);
       setStatus(statusData);
       setJobs(jobsData);
+      setStats(statsData);
+      setDataPreview(previewData);
       setLastRefresh(new Date());
     } catch (err) {
       if (err instanceof ApiRequestError) {
@@ -819,6 +1080,35 @@ export default function Admin(): JSX.Element {
           </div>
         </div>
 
+        {/* Data Statistics */}
+        <Show when={stats()}>
+          <div class="mb-6">
+            <DataStatsCard
+              stats={stats()!}
+              dateRange={statsDateRange()}
+              onDateRangeChange={async (days) => {
+                setStatsDateRange(days);
+                try {
+                  const newStats = await fetchAdminStats(days);
+                  setStats(newStats);
+                } catch (err) {
+                  // Keep existing stats on error
+                }
+              }}
+              labels={{
+                title: t('admin.dataStats'),
+                forecasts: t('admin.totalForecasts'),
+                observations: t('admin.totalObservations'),
+                deviations: t('admin.totalDeviations'),
+                sites: t('admin.totalSites'),
+                allTime: t('admin.allTime'),
+                last7Days: t('admin.last7Days'),
+                last30Days: t('admin.last30Days'),
+              }}
+            />
+          </div>
+        </Show>
+
         {/* Scheduled Jobs */}
         <Show when={jobs()}>
           <div class="mb-6">
@@ -830,6 +1120,25 @@ export default function Admin(): JSX.Element {
               nextRunLabel={t('admin.nextRun')}
               triggerLabel={t('admin.trigger')}
               notScheduledText={t('admin.notScheduled')}
+            />
+          </div>
+        </Show>
+
+        {/* Data Preview */}
+        <Show when={dataPreview()}>
+          <div class="mb-6">
+            <DataPreviewTable
+              preview={dataPreview()!}
+              labels={{
+                title: t('admin.dataPreview'),
+                forecastsTitle: t('admin.recentForecasts'),
+                observationsTitle: t('admin.recentObservations'),
+                noData: t('admin.noDataCollected'),
+                timestamp: t('admin.timestamp'),
+                site: t('admin.site'),
+                parameter: t('admin.parameter'),
+                value: t('admin.value'),
+              }}
             />
           </div>
         </Show>

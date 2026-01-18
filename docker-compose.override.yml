@@ -1,0 +1,11 @@
+# Local development overrides
+# This file is automatically loaded by docker-compose alongside docker-compose.yml
+# Port mappings for local development
+
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+  backend:
+    ports:
+      - "8000:8000"

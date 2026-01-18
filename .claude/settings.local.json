@@ -78,7 +78,22 @@
       "Bash(docker rm:*)",
       "Bash(docker start:*)",
       "Bash(docker cp:*)",
-      "Bash(docker restart:*)"
+      "Bash(docker restart:*)",
+      "Bash(docker-compose exec:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(npm run dev:*)",
+      "Bash(docker-compose logs:*)",
+      "Bash(docker ps:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill -9)",
+      "Bash(docker-compose build:*)",
+      "Bash(docker-compose down:*)",
+      "Bash(.venv/bin/python:*)",
+      "Bash(/home/fly/dev/meteo-score/backend/.venv/bin/pip install:*)",
+      "Bash(uv:*)",
+      "Bash(/home/fly/dev/meteo-score/backend/.venv/bin/python -c \"import os; os.environ[''ADMIN_USERNAME'']=''admin''; os.environ[''ADMIN_PASSWORD'']=''vDJBBVMDWHH9Sadfic''; from api.dependencies.auth import get_admin_credentials; print\\(get_admin_credentials\\(\\)\\)\")",
+      "Bash(source:*)",
+      "Bash(PGPASSWORD=$POSTGRES_PASSWORD psql:*)"
     ],
     "deny": [],
     "ask": []

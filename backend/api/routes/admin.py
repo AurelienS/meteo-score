@@ -252,13 +252,20 @@ async def trigger_observation_collection() -> CollectionResponse:
 
 
 @router.get("/stats", response_model=DataStatsResponse)
-async def get_admin_stats() -> DataStatsResponse:
+async def get_admin_stats(days: int | None = None) -> DataStatsResponse:
     """Get total data statistics.
+
+    Args:
+        days: Optional number of days to filter by. Valid values: 7, 30, or None (all time).
 
     Returns:
         DataStatsResponse with total counts for all data types.
     """
-    stats = await get_data_stats()
+    # Validate days parameter - only allow 7, 30, or None
+    if days is not None and days not in (7, 30):
+        days = None
+
+    stats = await get_data_stats(days=days)
     return DataStatsResponse(
         total_forecasts=stats.get("total_forecasts", 0),
         total_observations=stats.get("total_observations", 0),

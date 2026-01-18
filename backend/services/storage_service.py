@@ -228,8 +228,11 @@ async def get_execution_history(
         ]
 
 
-async def get_data_stats() -> dict[str, Any]:
+async def get_data_stats(days: int | None = None) -> dict[str, Any]:
     """Get total counts of all data in database.
+
+    Args:
+        days: Optional number of days to filter by. If None, returns all-time counts.
 
     Returns:
         Dict with total counts for forecasts, observations, deviations, pairs.
@@ -237,15 +240,27 @@ async def get_data_stats() -> dict[str, Any]:
     async_session = get_async_session_factory()
 
     async with async_session() as db:
-        # Use raw SQL for efficient counts
-        result = await db.execute(text("""
-            SELECT
-                (SELECT COUNT(*) FROM forecasts) as total_forecasts,
-                (SELECT COUNT(*) FROM observations) as total_observations,
-                (SELECT COUNT(*) FROM deviations) as total_deviations,
-                (SELECT COUNT(*) FROM forecast_observation_pairs) as total_pairs,
-                (SELECT COUNT(*) FROM sites) as total_sites
-        """))
+        if days is None:
+            # All-time counts
+            result = await db.execute(text("""
+                SELECT
+                    (SELECT COUNT(*) FROM forecasts) as total_forecasts,
+                    (SELECT COUNT(*) FROM observations) as total_observations,
+                    (SELECT COUNT(*) FROM deviations) as total_deviations,
+                    (SELECT COUNT(*) FROM forecast_observation_pairs) as total_pairs,
+                    (SELECT COUNT(*) FROM sites) as total_sites
+            """))
+        else:
+            # Counts for the last N days
+            result = await db.execute(text("""
+                SELECT
+                    (SELECT COUNT(*) FROM forecasts WHERE created_at >= NOW() - INTERVAL :days_interval) as total_forecasts,
+                    (SELECT COUNT(*) FROM observations WHERE created_at >= NOW() - INTERVAL :days_interval) as total_observations,
+                    (SELECT COUNT(*) FROM deviations WHERE created_at >= NOW() - INTERVAL :days_interval) as total_deviations,
+                    (SELECT COUNT(*) FROM forecast_observation_pairs WHERE created_at >= NOW() - INTERVAL :days_interval) as total_pairs,
+                    (SELECT COUNT(*) FROM sites) as total_sites
+            """), {"days_interval": f"{days} days"})
+
         row = result.fetchone()
 
         return {

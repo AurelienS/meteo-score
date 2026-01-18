@@ -1,6 +1,6 @@
 # Story 6.8: Fix Data Collection Pipeline
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -53,14 +53,14 @@ Critical bugs discovered in production:
   - [x] Create API endpoint `GET /api/admin/data-preview` returning recent records
   - [x] Return last 5 forecasts per model with timestamp, site, parameter, value
   - [x] Return last 5 observations per source with timestamp, site, parameter, value
-  - [ ] Add frontend component to display data preview in admin dashboard
-  - [ ] Add i18n translations for preview labels
+  - [x] Add frontend component to display data preview in admin dashboard
+  - [x] Add i18n translations for preview labels
 
 - [x] Task 5: Add admin total stats (AC: 4)
   - [x] Create API endpoint `GET /api/admin/stats` with total counts
   - [x] Return: total_forecasts, total_observations, total_deviations, total_pairs, total_sites
-  - [ ] Add date range for counts (all time, last 7 days, last 30 days)
-  - [ ] Display stats prominently in admin dashboard
+  - [x] Add date range for counts (all time, last 7 days, last 30 days)
+  - [x] Display stats prominently in admin dashboard
 
 - [x] Task 6: Create CLI for manual operations (AC: 6)
   - [x] Create `backend/cli.py` with argparse
@@ -69,7 +69,7 @@ Critical bugs discovered in production:
   - [x] Add `collect-forecasts` command for manual trigger
   - [x] Add `collect-observations` command for manual trigger
   - [x] Add `stats` command to show DB statistics
-  - [ ] Document CLI usage in README
+  - [x] Document CLI usage in README
 
 - [x] Task 7: Verify and test (AC: 1-7)
   - [x] Test data persistence with mock collectors (test_storage_service.py)
@@ -188,10 +188,17 @@ For Passy Plaine Joux, need to find:
 **Modified Files:**
 - `backend/core/models.py` - Added ExecutionLog model, beacon ID columns to Site
 - `backend/scheduler/jobs.py` - Refactored to persist data, load sites from DB, backup beacon fallback
-- `backend/api/routes/admin.py` - Added stats and data-preview endpoints
+- `backend/api/routes/admin.py` - Added stats and data-preview endpoints with days filter
+- `backend/services/storage_service.py` - Added days filter to get_data_stats()
 - `backend/db/seed.py` - Added beacon IDs to seed data
 - `backend/tests/conftest.py` - Added execution_logs cleanup
 - `backend/tests/test_admin_api.py` - Updated tests for new endpoints
+- `frontend/src/pages/Admin.tsx` - Added DataStatsCard and DataPreviewTable components
+- `frontend/src/lib/api.ts` - Added fetchAdminStats and fetchAdminDataPreview functions
+- `frontend/src/lib/types.ts` - Added DataStatsResponse, ForecastPreviewRecord, ObservationPreviewRecord types
+- `frontend/src/locales/en.json` - Added admin dashboard translations
+- `frontend/src/locales/fr.json` - Added admin dashboard translations (French)
+- `README.md` - Documented CLI usage
 
 ### Change Log
 
@@ -199,6 +206,9 @@ For Passy Plaine Joux, need to find:
 |------|--------|--------|
 | 2026-01-18 | Initial implementation of data persistence pipeline | Claude |
 | 2026-01-18 | Code review fixes: error handling, logging, test improvements | Claude |
+| 2026-01-18 | Added frontend data preview & stats components with date range filter | Claude |
+| 2026-01-18 | Added i18n translations (EN/FR) for admin dashboard | Claude |
+| 2026-01-18 | Documented CLI usage in README | Claude |
 
 ## References
 

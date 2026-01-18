@@ -186,6 +186,51 @@ npm run format         # Prettier
 npm run type-check     # TypeScript check
 ```
 
+## CLI Commands
+
+The backend includes a CLI for database operations and manual data collection. These commands are useful for administration, debugging, and initial setup.
+
+### Running CLI Commands
+
+**In Docker (recommended):**
+```bash
+docker-compose exec backend python -m cli <command>
+```
+
+**Locally:**
+```bash
+cd backend
+python -m cli <command>
+```
+
+### Available Commands
+
+| Command | Description | Options |
+|---------|-------------|---------|
+| `seed` | Seed database with initial data (sites, models, parameters) | `--force` to override non-empty check |
+| `migrate` | Run database migrations (alembic upgrade head) | - |
+| `stats` | Display database statistics (record counts) | - |
+| `collect-forecasts` | Manually trigger forecast collection | - |
+| `collect-observations` | Manually trigger observation collection | - |
+
+### Examples
+
+```bash
+# Initial database setup
+docker-compose exec backend python -m cli migrate
+docker-compose exec backend python -m cli seed
+
+# Force re-seed (overwrites existing data)
+docker-compose exec backend python -m cli seed --force
+
+# View database statistics
+docker-compose exec backend python -m cli stats
+
+# Manual data collection
+docker-compose exec backend python -m cli collect-forecasts
+docker-compose exec backend python -m cli collect-observations
+```
+
 ## Deployment
 
 The application is deployed using a branch-based workflow. Pushing to the `prod` branch triggers deployment to production.

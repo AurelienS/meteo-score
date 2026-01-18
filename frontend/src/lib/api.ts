@@ -15,6 +15,8 @@ import type {
   SchedulerJobsResponse,
   ToggleResponse,
   CollectionResponse,
+  DataStatsResponse,
+  DataPreviewResponse,
 } from './types';
 
 /** Base API URL from environment or default to same origin (empty string for relative URLs) */
@@ -345,4 +347,20 @@ export async function triggerForecastCollection(): Promise<CollectionResponse> {
  */
 export async function triggerObservationCollection(): Promise<CollectionResponse> {
   return fetchAdminApi<CollectionResponse>('/api/admin/collect/observations', 'POST');
+}
+
+/**
+ * Fetch admin data statistics.
+ * @param days - Optional number of days to filter by (7, 30, or undefined for all time)
+ */
+export async function fetchAdminStats(days?: number): Promise<DataStatsResponse> {
+  const endpoint = days ? `/api/admin/stats?days=${days}` : '/api/admin/stats';
+  return fetchAdminApi<DataStatsResponse>(endpoint);
+}
+
+/**
+ * Fetch admin data preview (recent records).
+ */
+export async function fetchAdminDataPreview(): Promise<DataPreviewResponse> {
+  return fetchAdminApi<DataPreviewResponse>('/api/admin/data-preview');
 }
